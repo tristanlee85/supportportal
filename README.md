@@ -12,3 +12,7 @@ You must first install the Tampermonkey extension for Chrome
  4. Click *Install*
 
 After the script is imported, it will be automatically enabled and available immediately. Refresh the portal application. 
+
+**Contributions:**
+
+If you have a fix for additional issues or ideas for enhancements, submit a pull request. By default, Tampermonkey will check daily for updates to the scripts so as new fixes/features are added, you'll be kept up-to-date.
