@@ -10,12 +10,12 @@
 
 (function() {
     window.Ext = Ext || {};
-    
+
     // because of when the scripts are executed by the extension, we must
     // check to see if the framework is available before applying
     var interval = setInterval(function () {
         if (Ext.define) {
-          
+
             /**
              * EXTJS-19770
              * Fixes issue where the ticket view scroll position jumps
@@ -44,7 +44,7 @@
                 override: 'Ext.grid.feature.RowBody',
                 innerSelector: '.' + Ext.baseCSSPrefix + 'grid-rowbody'
             });
-            
+
             /* ***************** Place additional fixes above ***************** */
             /* **************************************************************** */
             window.console && console.info && console.info('Portal fixes applied');
