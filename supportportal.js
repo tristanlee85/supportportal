@@ -50,5 +50,5 @@
             window.console && console.info && console.info('Portal fixes applied');
             clearInterval(interval);
         }
-    }, 5);
+    }, 10);
 })();
