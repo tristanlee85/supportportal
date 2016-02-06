@@ -1,5 +1,6 @@
 # Support Portal Fixes
 **Requirements:**
+
 You must first install the Tampermonkey extension for Chrome 
 (https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo?hl=en)
 
