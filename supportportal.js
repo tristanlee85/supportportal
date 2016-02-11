@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SenchaPortal
 // @namespace    SenchaPortal
-// @version      0.4
+// @version      0.5
 // @description  Contains temporary fixes to be applied to the portal
 // @author       Tristan Lee
 // @match        https://test-support.sencha.com
@@ -88,9 +88,9 @@
              *
              * Automatically parses links based on the raw text. This will no
              * longer be needed once everyone uses Portal 2 since it parses
-             * everything on the serve. For now, this will help for customers
+             * everything on the server. For now, this will help for customers
              * still using the old portal. This also fixes issues with the original
-             * links being parsed as the regex in Sencha.view.abstracts.field.BBCodeController
+             * links being parsed incorrectly as the regex in Sencha.view.abstracts.field.BBCodeController
              * is too forgiving about its URL pattern and will match class names.
              *
              * BUG FIX
@@ -145,14 +145,12 @@
                                 // wrap remaining URL matches in anchor tag
                                 text = text.replace(me.urlRe, '<a target="_blank" href="$1">$1</a>');
 
-
                                 // replace rogue </li> at correct position
                                 text = text.replace(me.listRe, '$1$3</li>');
 
                                 reply.reply_body = text;
                             });
-
-
+                            
                             if (dock) {
                                 dock.setTicket(ticket);
                                 dock.getStore().loadData(replies);
@@ -192,6 +190,27 @@
                             });
                         }
                     });
+                }
+            });
+
+            /* ************************************************************************ */
+
+            /**
+             * BUG FIX
+             *
+             * Forces the minimum value of the Credits Used field to be 0. Otherwise,
+             * it's possible to apply negative credits to a ticket and skew the output,
+             * perhaps even give more credits than the purchased depending on how the
+             * server handles this value.
+             */
+            Ext.define('override.view.ticket.view.form.Edit', {
+                override: 'Portal.view.ticket.view.form.Edit',
+
+                initComponent: function () {
+                    var me = this;
+
+                    me.callParent(arguments);
+                    me.lookupReference('ticket_form').down('[name=xcredits]').setMinValue(0);
                 }
             });
 
