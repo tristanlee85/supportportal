@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SenchaPortal
 // @namespace    SenchaPortal
-// @version      0.2
+// @version      0.3
 // @description  Contains temporary fixes to be applied to the portal
 // @author       Tristan Lee
 // @match        https://test-support.sencha.com
@@ -91,16 +91,21 @@
              * everything on the serve. For now, this will help for customers
              * still using the old portal. This also fixes issues with the original
              * links being parsed as the regex in Sencha.view.abstracts.field.BBCodeController
-             * is too forgiving about its URL pattern and will maych class names
+             * is too forgiving about its URL pattern and will match class names.
+             *
+             * BUG FIX
+             *
+             * List item text that contains BB code gets incorrectly parsed on the server and
+             * causes the <li> to be prematurely closed.
              */
             Ext.define('override.view.ticket.GridController', {
                 override: 'Portal.view.ticket.GridController',
 
-                // regex from Sencha.view.abstracts.field.BBCodeController is too forgiving on URLs
-                // and will match class names
-                urlRe:           /(?![^\{]*})(https?:\/\/)([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.\-!#@]*)*\/?/gi,
-                anchorRe:        /(<a[^<>]+href="(([^"]*))">)(.*?)(<\/a>)/gi, // $1 full match, $2 url, $4 text
-                anchorReplaceRe: /\{{2}(.*?)\|(.*?)\}{2}/gi,
+                // matches URLs except those otherwise wrapped in a tag
+                urlRe: /(https?:\/\/(?:w{1,3}.)?[^\s]*?(?:\.[a-z0-9/?!@#$=]+)+)(?![^<]*?(?:<\/\w+>|\/?>))/gi,
+
+                // matches the incorrect list parsing when BB code is used within list items
+                listRe: /(<li>.*?)(<\/li>)(.*?)<br>(?=<(li|\/ul)>)/gi,
 
                 loadTicket: function (grid, dock, tid) {
                     var me = this;
@@ -134,22 +139,22 @@
                                 uid:                  ticket.uid
                             });
 
-                            // make URLs clickable
                             Ext.Array.forEach(replies, function (reply, index, replies) {
                                 var text = reply.reply_body;
-
-                                // replace any existing anchor tags into a template
-                                // {{url|text}}
-                                text = text.replace(me.anchorRe, '{{$2|$4}}');
+                                if (ticket.tid == '28121' && index == 1) {
+                                    debugger;
+                                }
 
                                 // wrap remaining URL matches in anchor tag
                                 text = text.replace(me.urlRe, '<a target="_blank" href="$1">$1</a>');
 
-                                // convert templates to links
-                                text = text.replace(me.anchorReplaceRe, '<a target="_blank" href="$1">$2</a>');
+
+                                // replace rogue </li> at correct position
+                                text = text.replace(me.listRe, '$1$3</li>');
 
                                 reply.reply_body = text;
                             });
+
 
                             if (dock) {
                                 dock.setTicket(ticket);
