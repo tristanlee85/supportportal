@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SenchaPortal
 // @namespace    SenchaPortal
-// @version      0.3
+// @version      0.1.6
 // @description  Contains temporary fixes to be applied to the portal
 // @author       Tristan Lee
 // @match        https://test-support.sencha.com
@@ -141,7 +141,7 @@
 
                             Ext.Array.forEach(replies, function (reply, index, replies) {
                                 var text = reply.reply_body;
-                                
+
                                 // wrap remaining URL matches in anchor tag
                                 text = text.replace(me.urlRe, '<a target="_blank" href="$1">$1</a>');
 
