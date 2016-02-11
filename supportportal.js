@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SenchaPortal
 // @namespace    SenchaPortal
-// @version      0.5
+// @version      0.6
 // @description  Contains temporary fixes to be applied to the portal
 // @author       Tristan Lee
 // @match        https://test-support.sencha.com
@@ -150,7 +150,7 @@
 
                                 reply.reply_body = text;
                             });
-                            
+
                             if (dock) {
                                 dock.setTicket(ticket);
                                 dock.getStore().loadData(replies);
@@ -196,7 +196,7 @@
             /* ************************************************************************ */
 
             /**
-             * BUG FIX
+             * IMPROVEMENT
              *
              * Forces the minimum value of the Credits Used field to be 0. Otherwise,
              * it's possible to apply negative credits to a ticket and skew the output,
@@ -211,6 +211,24 @@
 
                     me.callParent(arguments);
                     me.lookupReference('ticket_form').down('[name=xcredits]').setMinValue(0);
+                }
+            });
+
+            /* ************************************************************************ */
+
+            /**
+             * IMPROVEMENT
+             *
+             * Preserves the scroll position of the ticket grid during refresh
+             */
+            Ext.define('override.view.ticket.Grid', {
+                override: 'Portal.view.ticket.Grid',
+
+                constructor: function (config) {
+                    Ext.apply(this.viewConfig, {
+                        preserveScrollOnReload: true
+                    });
+                    this.callParent(arguments);
                 }
             });
 
