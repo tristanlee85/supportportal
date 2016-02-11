@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SenchaPortal
 // @namespace    SenchaPortal
-// @version      0.7
+// @version      0.8
 // @description  Contains temporary fixes to be applied to the portal
 // @author       Tristan Lee
 // @match        https://test-support.sencha.com
@@ -357,6 +357,29 @@
                              '</div>',
                              '</div>'
                          ].join('')
+                }
+            });
+
+            /* ************************************************************************ */
+
+            /**
+             * IMPROVEMENT
+             *
+             * Loading the grid defaults to filtering tickets based on the
+             * logged-in user
+             */
+            Ext.define('override.view.ticket.Grid', {
+                override: 'Portal.view.ticket.Grid',
+
+                constructor: function (config) {
+                    this.config.filters.owner = {
+                        operator: "=",
+                        property: "owner",
+                        root:     "data",
+                        value:    Sencha.User.get('uid')
+                    };
+
+                    this.callParent([config]);
                 }
             });
 
