@@ -141,10 +141,7 @@
 
                             Ext.Array.forEach(replies, function (reply, index, replies) {
                                 var text = reply.reply_body;
-                                if (ticket.tid == '28121' && index == 1) {
-                                    debugger;
-                                }
-
+                                
                                 // wrap remaining URL matches in anchor tag
                                 text = text.replace(me.urlRe, '<a target="_blank" href="$1">$1</a>');
 
