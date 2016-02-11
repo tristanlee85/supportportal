@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SenchaPortal
 // @namespace    SenchaPortal
-// @version      0.6
+// @version      0.7
 // @description  Contains temporary fixes to be applied to the portal
 // @author       Tristan Lee
 // @match        https://test-support.sencha.com
@@ -14,16 +14,17 @@
     // because of when the scripts are executed by the extension, we must
     // check to see if the framework is available before applying
     var interval = setInterval(function () {
-        if (Ext.define) {
+        if (Ext.isReady) {
 
             /**
-             * BUG FIX
+             * BUG FIX (PORTAL-447)
              *
              * Fixes issue where the ticket view scroll position jumps
              * when attempting to select text
              */
             Ext.define('override.grid.NavigationModel', {
-                override:        'Ext.grid.NavigationModel',
+                override: 'Ext.grid.NavigationModel',
+
                 onItemMouseDown: function (view, record, item, index, mousedownEvent) {
                     var me = this;
                     // If the event is a touchstart, leave it until the click to focus
@@ -42,7 +43,8 @@
                 }
             });
             Ext.define('override.grid.feature.RowBody', {
-                override:      'Ext.grid.feature.RowBody',
+                override: 'Ext.grid.feature.RowBody',
+
                 innerSelector: '.' + Ext.baseCSSPrefix + 'grid-rowbody'
             });
 
@@ -93,7 +95,7 @@
              * links being parsed incorrectly as the regex in Sencha.view.abstracts.field.BBCodeController
              * is too forgiving about its URL pattern and will match class names.
              *
-             * BUG FIX
+             * BUG FIX (PORTAL-485, PORTAL-489)
              *
              * List item text that contains BB code gets incorrectly parsed on the server and
              * causes the <li> to be prematurely closed.
@@ -196,7 +198,7 @@
             /* ************************************************************************ */
 
             /**
-             * IMPROVEMENT
+             * IMPROVEMENT (PORTAL-491)
              *
              * Forces the minimum value of the Credits Used field to be 0. Otherwise,
              * it's possible to apply negative credits to a ticket and skew the output,
@@ -229,6 +231,132 @@
                         preserveScrollOnReload: true
                     });
                     this.callParent(arguments);
+                }
+            });
+
+            /* ************************************************************************ */
+
+            /**
+             * BUG FIX (PORTAL-482)
+             *
+             * Fixes issue with the Expand All button collapsing any already-expanded
+             * replies.
+             */
+            Ext.define('override.grid.plugin.RowExpander', {
+                override: 'Ext.grid.plugin.RowExpander',
+
+                expandAll: function () {
+                    var me = this,
+                        records = me.recordsExpanded,
+                        grid = me.grid,
+                        store = grid.getStore();
+                    if (store && store.getCount()) {
+                        store.each(function (record, idx) {
+                            // don't toggle rows already expanded
+                            if (!records[record.internalId]) {
+                                me.toggleRow(idx, record);
+                            }
+                        });
+                    }
+                    return this;
+                }
+            });
+
+            /* ************************************************************************ */
+
+            /**
+             * TODO
+             * BUG FIX (PORTAL-468)
+             *
+             * When submitting a ticket reply that fails (usually upload is too large),
+             * the load mask is not removed. There's no way to handle the failure
+             * currently. EXTJS-5762 will provide a fix to ensure that either the
+             * request failure callback is invoked and/or at the very least the
+             * 'exception' event is fired from the direct manager so that we can manually
+             * remove the mask.
+             */
+
+            /* ************************************************************************ */
+
+            /**
+             * IMPROVEMENT (PORTAL-466)
+             *
+             * Enable text selection in the panel header
+             */
+            Ext.define('override.panel.Header', {
+                override: 'Ext.panel.Header',
+
+                beforeRender: function () {
+                    var me = this,
+                        itemPosition = me.itemPosition;
+
+                    me.callSuper();
+
+                    if (itemPosition !== undefined) {
+                        me.insert(itemPosition, me._userItems);
+                    }
+                }
+            });
+
+            /* ************************************************************************ */
+
+            /**
+             * IMPROVEMENT
+             *
+             * Adds ticket number as a link in the info section
+             */
+            Ext.define('override.view.ticket.view.Info', {
+                override: 'Portal.view.ticket.view.Info',
+
+                cachedConfig: {
+                    tpl: [
+                             '<tpl exec="this.isCollapsed = this.getFromScope(\'collapsed\')"></tpl>',
+                             '<div class="header">',
+                             'Ticket Info: <a href="#ticket-{tid}">{tid}</a>',
+                             '<div class="collapse x-fa fa-chevron-up<tpl if="this.isCollapsed"> ',
+                             Ext.baseCSSPrefix,
+                             'hidden-display</tpl>" ext:action="collapse" data-qtip="Collapse ticket info"></div>',
+                             '<div class="expand x-fa fa-chevron-down<tpl if="!this.isCollapsed"> ',
+                             Ext.baseCSSPrefix, 'hidden-display</tpl>" ext:action="expand" data-qtip="Expand ticket info"></div>',
+                             '</div>',
+                             '<div class="body">',
+                             '<div class="row">',
+                             '<div><b>Opened By:</b> {[this.linkify(values.display_name, "popup-user-" + values.uid)]}</div>',
+                             '<div><b>Subscription:</b> {subscription_description}</div>',
+                             '</div>',
+                             '<div class="row bottom-border">',
+                             '<div><b>Open Date:</b> {open_date:date("M j `y, g:ia")}</div>',
+                             '<div><b>Company:</b> {[this.linkify(values.company, "popup-subscription-" + values.sid, true)]}</div>',
+                             '</div>',
+                             '<tpl if="Sencha.User.isAdmin()">',
+                             '<div class="row top-border">',
+                             '<div><b>Assigned To:</b> {[this.linkify(values.owner_display_name, "popup-user-" + values.owner)]}</div>',
+                             '<div><b>Status Detail:</b> {status_detail}</div>',
+                             '</div>',
+                             '<div class="row">',
+                             '<div><b>Minutes Worked:</b> {total_minutes_worked:pluralize("min", "mins", "0,0")}</div>',
+                             '<div><b>Tier:</b> {tier}</div>',
+                             '</div>',
+                             '<div class="row bottom-border">',
+                             '<div><b>Override Provided:</b> {[values.override ? "Yes" : "No"]}</div>',
+                             '<div><b>Reason:</b> {reason}</div>',
+                             '</div>',
+                             '</tpl>',
+                             '<div class="row top-border">',
+                             '<div><b>Ticket Type:</b> {ticket_type_text}</div>',
+                             '<div><b>Platforms:</b> {[values.platforms && values.platforms.length ? values.platforms.map(function(platform) { return platform.text; }).join(", ") : "None"]}</div>',
+                             '</div>',
+                             '<div class="row">',
+                             '<div><b>Credits Used:</b> {xcredits} (of {subscription_available_credits:number("0,0")} available)</div>',
+                             '<div><b>Browsers:</b> {[values.browsers && values.browsers.length ? values.browsers.map(function(browser) { return browser.text; }).join(", ") : "None"]}</div>',
+                             '</div>',
+                             '<div class="row">',
+                             '<div><b>Product:</b> {product_name} {product_version}</div>',
+                             '<div><b>Sencha Architect:</b> {[values.product_architect ? "Yes" : "No"]}</div>',
+                             '<div class="edit x-fa fa-pencil" ext:action="edit" data-qtip="Edit ticket info"></div>',
+                             '</div>',
+                             '</div>'
+                         ].join('')
                 }
             });
 
