@@ -14,7 +14,9 @@
     // because of when the scripts are executed by the extension, we must
     // check to see if the framework is available before applying
     var interval = setInterval(function () {
-        if (Ext.isReady) {
+        // Ext.isReady may be too late in some cases so we base
+        // it on when we're able to call define()
+        if (Ext.define) {
 
             /**
              * BUG FIX (PORTAL-447)
@@ -241,26 +243,36 @@
              *
              * Fixes issue with the Expand All button collapsing any already-expanded
              * replies.
+             *
+             * This override can't be applied until the portal's override is applied.
+             * We'll loop until we see that the parent override is applied then apply
+             * this one.
              */
-            Ext.define('override.grid.plugin.RowExpander', {
-                override: 'Ext.grid.plugin.RowExpander',
+            var portal482 = setInterval(function () {
+                if (Ext.ClassManager.overrideMap['Override.grid.plugin.RowExpander']) {
+                    Ext.define('override.grid.plugin.RowExpander', {
+                        override: 'Ext.grid.plugin.RowExpander',
 
-                expandAll: function () {
-                    var me = this,
-                        records = me.recordsExpanded,
-                        grid = me.grid,
-                        store = grid.getStore();
-                    if (store && store.getCount()) {
-                        store.each(function (record, idx) {
-                            // don't toggle rows already expanded
-                            if (!records[record.internalId]) {
-                                me.toggleRow(idx, record);
+                        expandAll: function () {
+                            var me = this,
+                                records = me.recordsExpanded,
+                                grid = me.grid,
+                                store = grid.getStore();
+                            if (store && store.getCount()) {
+                                store.each(function (record, idx) {
+                                    // don't toggle rows already expanded
+                                    if (!records[record.internalId]) {
+                                        me.toggleRow(idx, record);
+                                    }
+                                });
                             }
-                        });
-                    }
-                    return this;
+                            return this;
+                        }
+                    });
+
+                    clearInterval(portal482);
                 }
-            });
+            }, 10);
 
             /* ************************************************************************ */
 
@@ -390,5 +402,5 @@
             window.console && console.info && console.info('Portal fixes applied');
             clearInterval(interval);
         }
-    }, 100);
+    }, 10);
 })();
