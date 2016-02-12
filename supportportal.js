@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SenchaPortal
 // @namespace    SenchaPortal
-// @version      0.9
+// @version      0.10
 // @description  Contains temporary fixes to be applied to the portal
 // @author       Tristan Lee
 // @match        https://test-support.sencha.com
@@ -392,6 +392,32 @@
                     };
 
                     this.callParent([config]);
+                }
+            });
+
+            /* ************************************************************************ */
+
+            /**
+             * IMPROVEMENT
+             *
+             * Automatically collapse the west menu based on its previous state.
+             * This isn't based on the collapsed state due to how the width and
+             * classes are applied so it will be expanded when the application
+             * first loads and then automatically collapse.
+             */
+            Ext.define('override.view.main.West', {
+                override: 'Portal.view.main.West',
+
+                stateId: 'west-menu',
+
+                constructor: function (config) {
+                    var me = this;
+
+                    me.callParent([config]);
+
+                    if (me.getState().width === me.collapsedWidth) {
+                        me.on('render', me.collapse, me);
+                    }
                 }
             });
 

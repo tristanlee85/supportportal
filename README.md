@@ -28,6 +28,7 @@ After the script is imported, it will be automatically enabled and available imm
  - Enable text selection in panel header
  - Add ticket number as a link next to *Ticket Info*
  - Grid loads current user's tickets by default
+ - Auto-collapse west menu based on state width
 
 **Contributions:**
 
