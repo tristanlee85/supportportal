@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SenchaPortal
 // @namespace    SenchaPortal
-// @version      0.8
+// @version      0.9
 // @description  Contains temporary fixes to be applied to the portal
 // @author       Tristan Lee
 // @match        https://test-support.sencha.com
