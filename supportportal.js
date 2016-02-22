@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SenchaPortal
 // @namespace    SenchaPortal
-// @version      0.10
+// @version      0.11
 // @description  Contains temporary fixes to be applied to the portal
 // @author       Tristan Lee
 // @match        https://test-support.sencha.com
@@ -418,6 +418,171 @@
                     if (me.getState().width === me.collapsedWidth) {
                         me.on('render', me.collapse, me);
                     }
+                }
+            });
+
+            /* ************************************************************************ */
+
+            /**
+             * FEATURE
+             *
+             * Adds the ability to save a reply as a draft
+             */
+            Ext.define('override.window.MessageBox', {
+                override: 'Ext.window.MessageBox',
+
+                // Allows for passing 'buttons' config as an Object hash
+                updateButtonText: function () {
+                    var me = this,
+                        buttonText = me.buttonText,
+                        buttons = 0,
+                        btnId,
+                        btn;
+
+                    for (btnId in buttonText) {
+                        if (buttonText.hasOwnProperty(btnId)) {
+                            btn = me.msgButtons[btnId];
+                            if (btn) {
+
+                                if (me.cfg && me.cfg.buttons && Ext.isObject(me.cfg.buttons)) {
+                                    buttons = buttons | Math.pow(2, Ext.Array.indexOf(me.buttonIds, btnId));
+                                }
+
+                                if (btn.text !== buttonText[btnId]) {
+                                    btn.setText(buttonText[btnId]);
+                                }
+                            }
+                        }
+                    }
+                    return buttons;
+                }
+            });
+
+            Ext.define('override.view.ticket.view.form.Reply', {
+                override: 'Portal.view.ticket.view.form.Reply',
+
+                constructor: function (config) {
+                    var me = this;
+
+                    me.items[0].bottomToolbar.adminItems.splice(1, 0, {
+                        hidden:    true,
+                        html:      'Draft restored',
+                        xtype:     'component',
+                        reference: 'draftAlert',
+                        cls:       'draft-alert'
+                    });
+
+                    me.callParent([config]);
+                },
+
+                expand: function () {
+                    var me = this;
+                    me.callParent(arguments);
+                    me.fireEvent('replyexpand', me);
+                }
+            });
+
+            Ext.define('override.view.ticket.view.form.ReplyController', {
+                override: 'Portal.view.ticket.view.form.ReplyController',
+
+                control: {
+                    'portal-ticket-view-form-reply': {
+                        replyexpand: function () {
+                            var hasDraft = this.restoreDraft(),
+                                form = this.getView(),
+                                toolbar = form.down('[bottomToolbar]'),
+                                draftNotice = toolbar.lookupReference('draftAlert');
+
+                            this.clearDraft();
+
+                            if (hasDraft) {
+                                draftNotice.setHidden(false);
+                                draftNotice.getEl().highlight().fadeOut();
+                            }
+                        }
+                    }
+                },
+
+                reset: function () {
+                    var me = this,
+                        form = this.getView();
+                    if (form.isDirty()) {
+                        this.dirtyPrompt(function (button) {
+                            // save the reply as a draft
+                            if (button === 'cancel') {
+                                me.saveDraft();
+                                button = 'yes';
+                            }
+
+                            if (button === 'yes') {
+                                form.collapse(form.reset, form);
+                            }
+                        });
+                    } else {
+                        form.collapse(form.reset, form);
+                    }
+                },
+
+                dirtyPrompt: function (callback, scope) {
+                    var msg = Ext.Msg;
+                    scope = scope || this;
+
+                    msg.show({
+                        title:   '{{Continue_Question}{Continue?}}',
+                        message: '{{Unsaved_Changes_Cancel}{There are unsaved changes which will be lost. Are you sure you want to cancel?}}',
+                        buttons: {
+                            yes:    msg.buttonText.yes,
+                            no:     msg.buttonText.no,
+                            cancel: 'Save as Draft'
+                        },
+
+                        fn: function (button) {
+                            if (button === 'yes') {
+                                Sencha.util.General.clearDirty();
+                            }
+                            callback.call(scope, button);
+                        }
+                    });
+                },
+
+                getStorage: function () {
+                    return Ext.util.LocalStorage.get('ticket-draft');
+                },
+
+                getDraftInfo: function () {
+                    var form = this.getView();
+
+                    return {
+                        form:     form,
+                        field:    form.down('textarea'),
+                        storage:  this.getStorage(),
+                        ticketId: form.getTid()
+                    };
+                },
+
+                saveDraft: function () {
+                    var info = this.getDraftInfo(),
+                        value = info.field.getValue();
+
+                    info.storage.setItem(info.ticketId, value);
+                    info.storage.release();
+                },
+
+                restoreDraft: function () {
+                    var info = this.getDraftInfo(),
+                        draft = info.storage.getItem(info.ticketId);
+
+                    info.field.setValue(draft || null);
+                    info.storage.release();
+
+                    return draft !== null;
+                },
+
+                clearDraft: function () {
+                    var info = this.getDraftInfo();
+
+                    info.storage.removeItem(info.ticketId);
+                    info.storage.release();
                 }
             });
 
