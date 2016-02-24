@@ -29,6 +29,9 @@ After the script is imported, it will be automatically enabled and available imm
  - Add ticket number as a link next to *Ticket Info*
  - Grid loads current user's tickets by default
  - Auto-collapse west menu based on state width
+ 
+**Features**:
+ - Added ability to save a reply as a draft to local storage so it can be restored at a later time
 
 **Contributions:**
 

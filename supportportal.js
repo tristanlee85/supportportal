@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SenchaPortal
 // @namespace    SenchaPortal
-// @version      0.11
+// @version      0.12
 // @description  Contains temporary fixes to be applied to the portal
 // @author       Tristan Lee
 // @match        https://test-support.sencha.com
@@ -106,7 +106,7 @@
                 override: 'Portal.view.ticket.GridController',
 
                 // matches URLs except those otherwise wrapped in a tag
-                urlRe: /(https?:\/\/(?:w{1,3}.)?[^\s]*?(?:\.[a-z0-9/?!@#$=]+)+)(?![^<]*?(?:<\/\w+>|\/?>))/gi,
+                urlRe: /(https?:\/\/(?:w{1,3}.)?[^\s]*?(?:\.[a-z0-9/?!@#$=\-]+)+)(?![^<]*?(?:<\/\w+>|\/?>))/gi,
 
                 // matches the incorrect list parsing when BB code is used within list items
                 listRe: /(<li>.*?)(<\/li>)(.*?)<br>(?=<(li|\/ul)>)/gi,
@@ -478,7 +478,10 @@
                 expand: function () {
                     var me = this;
                     me.callParent(arguments);
-                    me.fireEvent('replyexpand', me);
+
+                    if (me.mode && me.mode === 'reply') {
+                        me.fireEvent('replyexpand', me);
+                    }
                 }
             });
 
@@ -524,8 +527,15 @@
                 },
 
                 dirtyPrompt: function (callback, scope) {
-                    var msg = Ext.Msg;
+                    var me = this,
+                        view = me.view,
+                        msg = Ext.Msg;
                     scope = scope || this;
+
+                    if (view.mode && view.mode !== 'reply') {
+                        me.callParent(arguments);
+                        return;
+                    }
 
                     msg.show({
                         title:   '{{Continue_Question}{Continue?}}',
