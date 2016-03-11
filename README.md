@@ -15,7 +15,7 @@ After the script is imported, it will be automatically enabled and available imm
 
 **Fixes**:
 
- - Ticket view scroll position jumps when selecting text/clicking row body
+ - Ticket view scroll position jumps when selecting text/clicking row body (partially fixed; you can select text and copy it, but as soon as the mouse is released, it still scrolls)
  - Creating hyperlink from selected text does not always prompt to enter a URL
  - List items containing BB code prematurely close the list and push the content to the next line
  - Ticket *Expand All* icon collapses any replies that are already expanded
@@ -31,7 +31,7 @@ After the script is imported, it will be automatically enabled and available imm
  - Auto-collapse west menu based on state width
  
 **Features**:
- - Added ability to save a reply as a draft to local storage so it can be restored at a later time
+ - Added ability to save a reply as a draft to local storage so it can be restored at a later time (only works when clicking the X on the reply body)
 
 **Contributions:**
 
