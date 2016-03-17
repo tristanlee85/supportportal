@@ -7,7 +7,7 @@ You must first install the Tampermonkey extension for Chrome
  Once the extension has been installed:
  1. Click the icon and choose *Dashboard*
  2. Click the *Utilities* tab on the upper-right
- 3. Import the following URL
+ 3. Import the following URL:
  https://raw.githubusercontent.com/tristanlee85/supportportal/2.1.x/supportportal.js
  4. Click *Install*
 
