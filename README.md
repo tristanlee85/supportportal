@@ -22,7 +22,7 @@ After the script is imported, it will be automatically enabled and available imm
 **Features**:
  - Localized ability to enable/disable specific customizations. This functionality can be found under *Settings > Additional Customizations*
  - Ability to disable automatic error-reporting
- - Ticket ID is a link to the production for easier copy/paste
+ - Ticket ID in title header is a link to the production URL for easier copy/paste
 
 **Contributions:**
 
