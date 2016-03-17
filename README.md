@@ -17,12 +17,12 @@ After the script is imported, it will be automatically enabled and available imm
 
 
 **Improvements**:
-
+ - Ability to disable mouse wheel scrolling on Credits User field
  
 **Features**:
  - Localized ability to enable/disable specific customizations. This functionality can be found under *Settings > Additional Customizations*
  - Ability to disable automatic error-reporting
- - Ability to disable mouse wheel scrolling on Credits User field
+ - Ticket ID is a link to the production for easier copy/paste
 
 **Contributions:**
 
