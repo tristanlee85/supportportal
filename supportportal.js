@@ -191,6 +191,23 @@
                     }
                 });
             }
+        },
+        'credits-scroll':  {
+            text:        'Quick-scroll Credits',
+            description: 'Disables mouse wheel events for the `Credits Used`',
+            type:        'improvement',
+            fn:          function () {
+                Ext.define('Override.view.ticket.view.Details', {
+                    override: 'Portal.view.ticket.view.Details',
+
+                    constructor: function (config) {
+                        var me = this;
+
+                        me.callParent([config]);
+                        me.down('numberfield[fieldLabel^=Credits]').mouseWheelEnabled = false;
+                    }
+                });
+            }
         }
     };
 
@@ -316,7 +333,7 @@
                     required:    value.required,
                     fn:          value.fn,
                     url:         value.url,
-                    enabled:     value.required === true || new Boolean(storage.getItem(key))
+                    enabled:     value.required === true || storage.getItem(key) === 'true'
                 });
             });
 
