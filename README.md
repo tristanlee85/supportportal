@@ -1,4 +1,4 @@
-# Support Portal Fixes - v2.1.x
+# Support Portal Customizations - v2.1.x
 **Requirements:**
 
 You must first install the Tampermonkey extension for Chrome
