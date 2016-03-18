@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         SenchaPortalTest
+// @name         SenchaPortal
 // @namespace    SenchaPortal
 // @version      2.1.0.2
 // @description  Contains customizations to be applied to the portal
