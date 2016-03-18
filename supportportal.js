@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SenchaPortal
 // @namespace    SenchaPortal
-// @version      2.1.0.3
+// @version      2.1.0.4
 // @description  Contains customizations to be applied to the portal
 // @author       Tristan Lee
 // @match        https://test-support.sencha.com
@@ -18,7 +18,9 @@
     var
         /**
          * This is the default remote path where all customization scripts will be stored. Unless you plan
-         * on running scripts from your own repository, there should be no need to change this.
+         * on running scripts from your own repository, there should be no need to change this. Also notice
+         * that rawgit.com is used. This is a MUST so that the scripts are returned with the correct MIME
+         * type. Otherwise, they are received as text/plain and will not be executed.
          * @type {string}
          */
         remoteScriptPath = '//rawgit.com/tristanlee85/supportportal/2.1.x/scripts/',
