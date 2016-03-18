@@ -14,16 +14,18 @@ You must first install the Tampermonkey extension for Chrome
 After the script is imported, it will be automatically enabled and available immediately. Refresh the portal application.
 
 **Fixes**:
-
+ - Creating a hyperlink from selected text in the BBCode editor doesn't always promp to enter a URL
 
 **Improvements**:
  - Ability to disable mouse wheel scrolling on Credits User field
+ - Automatically parse non-linkified URLs in the reply bodies and fixes broken list items that code BBCode
  
 **Features**:
  - Localized ability to enable/disable specific customizations. This functionality can be found under *Settings > Additional Customizations*
- - Ability to disable automatic error-reporting
+ - Disable automatic error-reporting
  - Ticket ID in title header is a link to the production URL for easier copy/paste
  - Reply draft functionality automatically saves your reply as you type. You may return to the ticket later and the reply will be automatically restored. The draft is removed once the reply is sent.
+ - Default the tickets grid to only show tickets assigned to you
 
 **Contributions:**
 

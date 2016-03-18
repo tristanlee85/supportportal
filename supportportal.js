@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SenchaPortal
 // @namespace    SenchaPortal
-// @version      2.1.0.4
+// @version      2.1.0.5
 // @description  Contains customizations to be applied to the portal
 // @author       Tristan Lee
 // @match        https://test-support.sencha.com
@@ -62,7 +62,6 @@
             description: 'Prevents application errors from being reported',
             type:        'feature',
             fn:          function () {
-
                 Ext.define('Override.error.Manager', {}, function () {
                     Ext.error.Manager.setActive({onerror: false, exterror: false});
                 });
@@ -75,30 +74,48 @@
             required:    true,
             scriptname:  'settings-custom.js'
         },
-        'credits-scroll':  {
+
+        'credits-scroll': {
             text:        'Quick-scroll Credits',
             description: 'Disables mouse wheel events for the `Credits Used`',
             type:        'improvement',
             scriptname:  'credits-scroll.js'
         },
-        'ticket-link':     {
+
+        'ticket-link': {
             text:        'Quick Link Copy',
             description: 'Adds a production link to the ticket ID to quicker copying',
             type:        'feature',
             scriptname:  'ticket-link.js'
         },
-        'bbcode-link':     {
+
+        'bbcode-link': {
             text:        'BBCode Link Option',
             description: 'Fixes issue where creating a hyperlink from selected text does not always display the prompt for supplying the URL',
             type:        'bug',
             scriptname:  'bbcode-link.js'
         },
-        'reply-draft':     {
+
+        'reply-draft': {
             text:        'Save Reply Draft',
             description: ['Automatically saves the reply as a draft until it\'s submitted.',
-                             'This becomes restored automatically when revisitng the ticket.'].join(' '),
+                             'This becomes restored automatically when revisiting the ticket.'].join(' '),
             type:        'feature',
             scriptname:  'reply-draft.js'
+        },
+
+        'ticket-replies-parser': {
+            text:        'Parse Ticket Replies',
+            description: 'Parses non-linkified URLs and fixes various formattings issues',
+            type:        'improvement',
+            scriptname:  'ticket-replies-parser.js'
+        },
+
+        'my-tickets-grid': {
+            text:        'View My Tickets Only',
+            description: 'Forces the full and mini grid to only show tickets assigned to you',
+            type:        'feature',
+            scriptname:  'my-tickets-mini-grid.js'
         }
     };
 
