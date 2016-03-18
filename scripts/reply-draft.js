@@ -87,7 +87,8 @@ Ext.define('Override.view.ticket.form.ReplyController', {
 
         'portal-ticket-form-reply sencha-abstracts-field-textarea': {
             keypress: {
-                buffer: 1000,
+                // save the draft if a key hasn't been pressed after 5 seconds
+                buffer: 5000,
                 fn:     function () {
                     var me = this;
                     me.saveDraft();
