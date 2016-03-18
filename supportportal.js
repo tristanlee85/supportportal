@@ -1,14 +1,41 @@
 // ==UserScript==
-// @name         SenchaPortal
+// @name         SenchaPortalTest
 // @namespace    SenchaPortal
-// @version      2.1.0
-// @description  Contains temporary fixes to be applied to the portal
+// @version      2.1.0.2
+// @description  Contains customizations to be applied to the portal
 // @author       Tristan Lee
 // @match        https://test-support.sencha.com
 // @grant        none
 // ==/UserScript==
 
 (function () {
+    /**
+     * This section contains environment variables that determine the location of any customization scripts
+     * to be loaded. When developing scripts locally, you will want to change this mode so that it loads your
+     * local files. Otherwise, the typical remote source is used since all scripts will be available in the
+     * repository.
+     */
+    var
+        /**
+         * This is the default remote path where all customization scripts will be stored. Unless you plan
+         * on running scripts from your own repository, there should be no need to change this.
+         * @type {string}
+         */
+        remoteScriptPath = '//raw.githubusercontent.com/tristanlee85/supportportal/2.1.x/scripts/',
+
+        /**
+         * The local path for loading scripts during development.
+         * @type {string}
+         */
+        localScriptPath = '//support.sencha.dev/scripts/',
+
+        /**
+         * The mode that the loader will use to determine which script path to use. Unless you are testing
+         * scripts, this should be set to `remote`.
+         * @type {string} local|remote
+         */
+        scriptMode = 'remote';
+
     /**
      * Customizations are overrides to be applied to the application as it's loaded.
      * These can be anything including bug fixes, improvements, or new features. Each
@@ -24,8 +51,8 @@
      * - description : String (optional) - short description about the customization
      * - type : String (required) - can be one of the following: bug|improvement|feature
      * - required : Boolean (optional) - if `true`, this customization will always be enabled
-     * - fn : Function (required) - mutually exclusive to `url`, this contains the heart of the customization
-     * - url : String (required) - mutually exclusive to `fn`, this loads a remote customization
+     * - fn : Function (required) - mutually exclusive to `scriptname`, this contains the heart of the customization
+     * - scriptname : String (required) - mutually exclusive to `fn`, this loads a remote customization (eg. reply-draft.js)
      */
     var customizations = {
         'error-reporting': {
@@ -44,200 +71,32 @@
             description: 'Adds a menu item for toggling customizations',
             type:        'feature',
             required:    true,
-            fn:          function () {
-                Ext.define('Customization.view.Customizations', {
-                    extend: 'Ext.grid.Panel',
-                    alias:  'widget.customsgrid',
-
-                    store:       {
-                        type:       'chained',
-                        source:     'portal-customizations',
-                        groupField: 'type',
-
-                        // only show the ones that aren't forced to be enabled
-                        filters: [{
-                            property: 'required',
-                            value:    false
-                        }]
-                    },
-                    title:       'Available Customizations',
-                    columnLines: true,
-                    columns:     [{
-                        text:      'ID',
-                        dataIndex: 'id',
-                        width:     100
-                    }, {
-                        text:      'Name',
-                        dataIndex: 'text',
-                        width:     150
-                    }, {
-                        text:      'Description',
-                        dataIndex: 'description',
-                        flex:      1
-                    }, {
-                        text:      'Type',
-                        dataIndex: 'type',
-                        renderer:  function (v) {
-                            return Ext.util.Format.capitalize(v);
-                        }
-                    }, {
-                        xtype:     'booleancolumn',
-                        text:      'Enabled',
-                        dataIndex: 'enabled',
-                        trueText:  'Yes',
-                        falseText: 'No'
-                    }, {
-                        xtype:     'actioncolumn',
-                        dataIndex: 'enabled',
-                        width:     50,
-                        items:     [{
-                            getClass: function (v, metadata, record) {
-                                return ['x-fa', v ? 'fa-toggle-on' : 'fa-toggle-off'].join(' ');
-                            },
-                            handler:  function (grid, rowIdx, colIdx, meta, event, record) {
-                                record.set('enabled', !record.get('enabled'));
-                            }
-                        }]
-                    }],
-                    features:    [{
-                        ftype:          'grouping',
-                        groupHeaderTpl: '{name:capitalize}'
-                    }],
-                    viewConfig:  {
-                        stripeRows: true,
-                        emptyText:  'There are no customizations to configure'
-                    },
-                    tbar:        {
-                        xtype:  'container',
-                        layout: 'center',
-                        items:  [{
-                            layout: {
-                                type:  'vbox',
-                                align: 'middle'
-                            },
-                            items:  [
-                                {
-                                    html: 'To apply changes, you must reload the application.'
-                                },
-                                {
-                                    xtype:   'button',
-                                    text:    'Reload Application',
-                                    handler: function () {
-                                        window.location.reload(false);
-                                    }
-                                }
-                            ]
-                        }]
-                    }
-                });
-
-                Ext.define('Override.util.routers.Settings', {}, function () {
-                    var map = Portal.util.routers.Settings.getViewMap();
-                    Ext.merge(map.settings, {custom: {admin: true, fn: 'showSettingCustom'}});
-                    Portal.util.routers.Settings.setViewMap(map);
-
-                    Ext.apply(Portal.util.routers.Settings, {
-                        showSettingCustom: function () {
-                            var me = this,
-                                cls = Customization.view.Customizations,
-                                feature = 'settings-portal-custom',
-                                grid = me.centerHasChild(cls.prototype.xtype);
-                            me.addWest();
-                            if (!grid) {
-                                grid = me.showCenter(cls, feature);
-                            }
-                        }
-                    });
-                });
-
-                Ext.define('override.view.main.West', {
-                    override: 'Portal.view.main.West',
-
-                    initComponent: function () {
-                        var me = this;
-                        me.callParent();
-
-                        me.on('render', function (me) {
-                            var settings = this.getComponent('settings'),
-                                items = settings.items;
-                            items = Ext.Array.merge(items, [
-                                {
-                                    xtype: 'sencha-westitemseperator'
-                                },
-                                {
-                                    html:   'Additional Customizations',
-                                    icon:   'fa-wrench',
-                                    itemId: 'customizations',
-                                    hash:   {
-                                        dashboard:    null,
-                                        download:     null,
-                                        home:         null,
-                                        log:          null,
-                                        login:        null,
-                                        metrics:      null,
-                                        order:        null,
-                                        popup:        null,
-                                        roundrobin:   null,
-                                        settings:     'settings-custom',
-                                        subscription: null,
-                                        team:         null,
-                                        ticket:       null,
-                                        user:         null
-                                    }
-                                }]);
-
-                            settings.items = items;
-                        });
-                    }
-                });
-            }
+            scriptname:  'settings-custom.js'
         },
         'credits-scroll':  {
             text:        'Quick-scroll Credits',
             description: 'Disables mouse wheel events for the `Credits Used`',
             type:        'improvement',
-            fn:          function () {
-                Ext.define('Override.view.ticket.view.Details', {
-                    override: 'Portal.view.ticket.view.Details',
-
-                    constructor: function (config) {
-                        var me = this;
-
-                        me.callParent([config]);
-                        me.down('numberfield[fieldLabel^=Credits]').mouseWheelEnabled = false;
-                    }
-                });
-            }
+            scriptname:  'credits-scroll.js'
         },
         'ticket-link':     {
             text:        'Quick Link Copy',
             description: 'Adds a production link to the ticket ID to quicker copying',
             type:        'feature',
-            fn:          function () {
-                Ext.define('Override.view.ticket.TicketContainerModel', {
-                    override: 'Portal.view.ticket.TicketContainerModel',
-
-                    constructor: function (config) {
-                        var me = this,
-                            formulas;
-                        me.callParent([config]);
-
-                        formulas = me.getFormulas();
-                        formulas.ticketTitle = function (get) {
-                            var record = get('record'),
-                                jiras;
-                            if (record) {
-                                jiras = record.get('jiras');
-                                return (jiras ? '<span class="fa fa-bug" data-qtip="' + Ext.util.Format.plural(jiras.length, 'Issue') + '"></span>' : '') + Ext.String.format('<a target="_blank" href="https://support.sencha.com/#ticket-{0}">#{0}</a>', record.getId()) + ' ' + record.get('title');
-                            } else {
-                                return '';
-                            }
-                        };
-
-                        me.setFormulas(formulas);
-                    },
-                });
-            }
+            scriptname:  'ticket-link.js'
+        },
+        'bbcode-link':     {
+            text:        'BBCode Link Option',
+            description: 'Fixes issue where creating a hyperlink from selected text does not always display the prompt for supplying the URL',
+            type:        'bug',
+            scriptname:  'bbcode-link.js'
+        },
+        'reply-draft':     {
+            text:        'Save Reply Draft',
+            description: ['Automatically saves the reply as a draft until it\'s submitted.',
+                             'This becomes restored automatically when revisitng the ticket.'].join(' '),
+            type:        'feature',
+            scriptname:  'reply-draft.js'
         }
     };
 
@@ -263,9 +122,14 @@
                             stack: true,
                             dump:  ex || null
                         });
-                    };
+                    },
+                    scriptPath = scriptMode === 'local' ? localScriptPath : remoteScriptPath;
 
                 Ext.Microloader.onMicroloaderReady(function () {
+                    var hasScripts = false,
+                        scriptsLoaded = [],
+                        scriptsInterval;
+
                     // initialize the store with available customizations
                     store = initStore(customizations);
 
@@ -273,14 +137,14 @@
                     store.each(function (record) {
                         var id = record.get('id'),
                             fn = record.get('fn'),
-                            url = record.get('url'),
+                            scriptName = record.get('scriptname'),
                             enabled = record.get('enabled');
 
                         // ensure both properties weren't supplied
-                        if (fn && url) {
+                        if (fn && scriptName) {
                             Ext.log({
                                 level: 'warn',
-                                msg:   Ext.String.format('Unable to apply \'{0}\'. \'fn\' and \'url\' must be mutually exclusive.', id)
+                                msg:   Ext.String.format('Unable to apply \'{0}\'. \'fn\' and \'scriptname\' must be mutually exclusive.', id)
                             });
                             return;
                         }
@@ -301,19 +165,32 @@
 
                         // load the remote source; this should be synchronous since it's before Ext.isReady
                         else {
+                            hasScripts = true;
                             Ext.Loader.loadScript({
-                                url:     url,
+                                url:     Ext.String.format('{0}{1}', scriptPath, scriptName),
                                 onLoad:  function () {
                                     fnSuccess(id);
+                                    Ext.Array.remove(scriptsLoaded, id);
                                 },
                                 onError: function () {
                                     fnError(id);
+                                    Ext.Array.remove(scriptsLoaded, id);
                                 }
                             });
+                            Ext.Array.push(scriptsLoaded, id);
                         }
                     });
 
-                    Ext.log({outdent: 1, level: 'info', msg: 'Portal customizations applied!'});
+                    if (hasScripts) {
+                        scriptsInterval = setInterval(function () {
+                            if (scriptsLoaded.length === 0) {
+                                clearInterval(scriptsInterval);
+                                Ext.log({outdent: 1, level: 'info', msg: 'Portal customizations applied!'});
+                            }
+                        }, 1);
+                    } else {
+                        Ext.log({outdent: 1, level: 'info', msg: 'Portal customizations applied!'});
+                    }
                 });
 
             }
@@ -330,7 +207,7 @@
                     {name: 'type'},
                     {name: 'required', type: 'boolean', defaultValue: false},
                     {name: 'fn', type: 'auto'},
-                    {name: 'url'},
+                    {name: 'scriptname'},
                     {name: 'enabled', type: 'boolean', defaultValue: false}
                 ],
 
@@ -362,7 +239,7 @@
                     type:        value.type,
                     required:    value.required,
                     fn:          value.fn,
-                    url:         value.url,
+                    scriptname:  value.scriptname,
                     enabled:     value.required === true || storage.getItem(key) === 'true'
                 });
             });
