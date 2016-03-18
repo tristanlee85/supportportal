@@ -21,7 +21,7 @@
          * on running scripts from your own repository, there should be no need to change this.
          * @type {string}
          */
-        remoteScriptPath = '//raw.githubusercontent.com/tristanlee85/supportportal/2.1.x/scripts/',
+        remoteScriptPath = '//rawgit.com/tristanlee85/supportportal/2.1.x/scripts/',
 
         /**
          * The local path for loading scripts during development.
