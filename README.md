@@ -1,4 +1,4 @@
-# Support Portal Fixes
+# Support Portal Customizations - v2.1.x
 **Requirements:**
 
 You must first install the Tampermonkey extension for Chrome
@@ -8,30 +8,24 @@ You must first install the Tampermonkey extension for Chrome
  1. Click the icon and choose *Dashboard*
  2. Click the *Utilities* tab on the upper-right
  3. Import the following URL:
- https://raw.githubusercontent.com/tristanlee85/supportportal/master/supportportal.js
+ https://rawgit.com/tristanlee85/supportportal/2.1.x/supportportal.js
  4. Click *Install*
 
 After the script is imported, it will be automatically enabled and available immediately. Refresh the portal application.
 
 **Fixes**:
-
- - Ticket view scroll position jumps when selecting text/clicking row body (partially fixed; you can select text and copy it, but as soon as the mouse is released, it still scrolls)
- - Creating hyperlink from selected text does not always prompt to enter a URL
- - List items containing BB code prematurely close the list and push the content to the next line
- - Ticket *Expand All* icon collapses any replies that are already expanded
+ - Creating a hyperlink from selected text in the BBCode editor doesn't always promp to enter a URL
 
 **Improvements**:
-
- - Automatically parse links from their raw text
- - Minimum value of 0 is set to the *Credits Used* field. It was possible to apply negative credits to a ticket
- - Preserve scroll position when left ticket grid reloads
- - Enable text selection in panel header
- - Add ticket number as a link next to *Ticket Info*
- - Grid loads current user's tickets by default
- - Auto-collapse west menu based on state width
+ - Ability to disable mouse wheel scrolling on Credits User field
+ - Automatically parse non-linkified URLs in the reply bodies and fixes broken list items that code BBCode
  
 **Features**:
- - Added ability to save a reply as a draft to local storage so it can be restored at a later time (only works when clicking the X on the reply body)
+ - Localized ability to enable/disable specific customizations. This functionality can be found under *Settings > Additional Customizations*
+ - Disable automatic error-reporting
+ - Ticket ID in title header is a link to the production URL for easier copy/paste
+ - Reply draft functionality automatically saves your reply as you type. You may return to the ticket later and the reply will be automatically restored. The draft is removed once the reply is sent.
+ - Default the tickets grid to only show tickets assigned to you
 
 **Contributions:**
 

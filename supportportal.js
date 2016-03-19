@@ -1,607 +1,268 @@
 // ==UserScript==
 // @name         SenchaPortal
 // @namespace    SenchaPortal
-// @version      0.12
-// @description  Contains temporary fixes to be applied to the portal
+// @version      2.1.0.5
+// @description  Contains customizations to be applied to the portal
 // @author       Tristan Lee
 // @match        https://test-support.sencha.com
 // @grant        none
 // ==/UserScript==
 
 (function () {
+    /**
+     * This section contains environment variables that determine the location of any customization scripts
+     * to be loaded. When developing scripts locally, you will want to change this mode so that it loads your
+     * local files. Otherwise, the typical remote source is used since all scripts will be available in the
+     * repository.
+     */
+    var
+        /**
+         * This is the default remote path where all customization scripts will be stored. Unless you plan
+         * on running scripts from your own repository, there should be no need to change this. Also notice
+         * that rawgit.com is used. This is a MUST so that the scripts are returned with the correct MIME
+         * type. Otherwise, they are received as text/plain and will not be executed.
+         * @type {string}
+         */
+        remoteScriptPath = '//rawgit.com/tristanlee85/supportportal/2.1.x/scripts/',
+
+        /**
+         * The local path for loading scripts during development.
+         * @type {string}
+         */
+        localScriptPath = '//support.sencha.dev/scripts/',
+
+        /**
+         * The mode that the loader will use to determine which script path to use. Unless you are testing
+         * scripts, this should be set to `remote`.
+         * @type {string} local|remote
+         */
+        scriptMode = 'remote';
+
+    /**
+     * Customizations are overrides to be applied to the application as it's loaded.
+     * These can be anything including bug fixes, improvements, or new features. Each
+     * customization is loaded and activated depending on the user's setting. You may
+     * disable any customizations under the 'Settings > Additional Customizations'
+     * menu.
+     *
+     * For the sake of consistency, classes should be defined in the `Customization` namespace.
+     * Overrides should be defined in the `Override` namespace.
+     *
+     * Configurations can be defined with the following parameters:
+     * - text : String (optional) - friendly display name for the customization
+     * - description : String (optional) - short description about the customization
+     * - type : String (required) - can be one of the following: bug|improvement|feature
+     * - required : Boolean (optional) - if `true`, this customization will always be enabled
+     * - fn : Function (required) - mutually exclusive to `scriptname`, this contains the heart of the customization
+     * - scriptname : String (required) - mutually exclusive to `fn`, this loads a remote customization (eg. reply-draft.js)
+     */
+    var customizations = {
+        'error-reporting': {
+            text:        'Disable Error Reporting',
+            description: 'Prevents application errors from being reported',
+            type:        'feature',
+            fn:          function () {
+                Ext.define('Override.error.Manager', {}, function () {
+                    Ext.error.Manager.setActive({onerror: false, exterror: false});
+                });
+            }
+        },
+
+        'settings-custom': {
+            description: 'Adds a menu item for toggling customizations',
+            type:        'feature',
+            required:    true,
+            scriptname:  'settings-custom.js'
+        },
+
+        'credits-scroll': {
+            text:        'Quick-scroll Credits',
+            description: 'Disables mouse wheel events for the `Credits Used`',
+            type:        'improvement',
+            scriptname:  'credits-scroll.js'
+        },
+
+        'ticket-link': {
+            text:        'Quick Link Copy',
+            description: 'Adds a production link to the ticket ID to quicker copying',
+            type:        'feature',
+            scriptname:  'ticket-link.js'
+        },
+
+        'bbcode-link': {
+            text:        'BBCode Link Option',
+            description: 'Fixes issue where creating a hyperlink from selected text does not always display the prompt for supplying the URL',
+            type:        'bug',
+            scriptname:  'bbcode-link.js'
+        },
+
+        'reply-draft': {
+            text:        'Save Reply Draft',
+            description: ['Automatically saves the reply as a draft until it\'s submitted.',
+                             'This becomes restored automatically when revisiting the ticket.'].join(' '),
+            type:        'feature',
+            scriptname:  'reply-draft.js'
+        },
+
+        'ticket-replies-parser': {
+            text:        'Parse Ticket Replies',
+            description: 'Parses non-linkified URLs and fixes various formattings issues',
+            type:        'improvement',
+            scriptname:  'ticket-replies-parser.js'
+        },
+
+        'my-tickets-grid': {
+            text:        'View My Tickets Only',
+            description: 'Forces the full and mini grid to only show tickets assigned to you',
+            type:        'feature',
+            scriptname:  'my-tickets-mini-grid.js'
+        }
+    };
+
+
+    /** ************************************************************************************************************ **/
     window.Ext = Ext || {};
 
     // because of when the scripts are executed by the extension, we must
     // check to see if the framework is available before applying
     var interval = setInterval(function () {
-        // Ext.isReady may be too late in some cases so we base
-        // it on when we're able to call define()
-        if (Ext.define) {
+            // When the Microloader is available, we'll initialize everything
+            if (Ext.Microloader) {
+                clearInterval(interval);
 
-            /**
-             * BUG FIX (PORTAL-447)
-             *
-             * Fixes issue where the ticket view scroll position jumps
-             * when attempting to select text
-             */
-            Ext.define('override.grid.NavigationModel', {
-                override: 'Ext.grid.NavigationModel',
-
-                onItemMouseDown: function (view, record, item, index, mousedownEvent) {
-                    var me = this;
-                    // If the event is a touchstart, leave it until the click to focus
-                    // A mousedown outside a cell. Must be in a Feature, or on a row border
-                    if (!mousedownEvent.position.cellElement && (mousedownEvent.pointerType !== 'touch')) {
-                        // Stamp the closest cell into the event as if it were a cellmousedown
-                        me.getClosestCell(mousedownEvent);
-                        // If we are not already on that position, set position there.
-                        if (!me.position.isEqual(mousedownEvent.position)) {
-                            me.setPosition(mousedownEvent.position, null, mousedownEvent);
-                        }
-                        // If the browser autoscrolled to bring the cell into focus
-                        // undo that.
-                        view.getScrollable().restoreState();
-                    }
-                }
-            });
-            Ext.define('override.grid.feature.RowBody', {
-                override: 'Ext.grid.feature.RowBody',
-
-                innerSelector: '.' + Ext.baseCSSPrefix + 'grid-rowbody'
-            });
-
-            /* ************************************************************************ */
-
-            /**
-             * BUG FIX
-             *
-             * Fixes issue where creating a hyperlink from selected text
-             * does not always display the prompt for supplying the URL
-             */
-            Ext.define('override.view.abstracts.field.BBCodeController', {
-                override: 'Sencha.view.abstracts.field.BBCodeController',
-
-                handleLink: function (button) {
-                    var me = this,
-                        info = me.getWrapInfo(button),
-                        urlRe = me.urlRe,
-                        selection = info.value.substring(info.pos.start, info.pos.end);
-
-                    // we want to test the RE based on the selection, not the entire value
-                    if (urlRe.test(selection)) {
-                        me.wrapText(info);
-                    } else {
-                        //TODO i18n
-                        Ext.Msg.prompt('Provide URL', 'Please provide a URL for this link', function (btn, text) {
-                            if (btn === 'ok' && urlRe.test(text)) {
-                                //delay it in case the user pressed ENTER. seems this adds a linebreak
-                                setTimeout(function () {
-                                    info.attr = '"' + text + '"';
-                                    me.wrapText(info);
-                                }, 0);
-                            }
+                var store,
+                    fnSuccess = function (id) {
+                        Ext.log({level: 'info', msg: Ext.String.format('- \'{0}\': success', id)});
+                    },
+                    fnError = function (id, ex) {
+                        Ext.log({
+                            level: 'error',
+                            msg:   Ext.String.format('- \'{0}\': failure', id),
+                            stack: true,
+                            dump:  ex || null
                         });
-                    }
-                }
-            });
+                    },
+                    scriptPath = scriptMode === 'local' ? localScriptPath : remoteScriptPath;
 
-            /* ************************************************************************ */
+                Ext.Microloader.onMicroloaderReady(function () {
+                    var hasScripts = false,
+                        scriptsLoaded = [],
+                        scriptsInterval;
 
-            /**
-             * IMPROVEMENT
-             *
-             * Automatically parses links based on the raw text. This will no
-             * longer be needed once everyone uses Portal 2 since it parses
-             * everything on the server. For now, this will help for customers
-             * still using the old portal. This also fixes issues with the original
-             * links being parsed incorrectly as the regex in Sencha.view.abstracts.field.BBCodeController
-             * is too forgiving about its URL pattern and will match class names.
-             *
-             * BUG FIX (PORTAL-485, PORTAL-489)
-             *
-             * List item text that contains BB code gets incorrectly parsed on the server and
-             * causes the <li> to be prematurely closed.
-             */
-            Ext.define('override.view.ticket.GridController', {
-                override: 'Portal.view.ticket.GridController',
+                    // initialize the store with available customizations
+                    store = initStore(customizations);
 
-                // matches URLs except those otherwise wrapped in a tag
-                urlRe: /(https?:\/\/(?:w{1,3}.)?[^\s]*?(?:\.[a-z0-9/?!@#$=\-]+)+)(?![^<]*?(?:<\/\w+>|\/?>))/gi,
+                    Ext.log({indent: 1, msg: 'Applying portal customizations...'});
+                    store.each(function (record) {
+                        var id = record.get('id'),
+                            fn = record.get('fn'),
+                            scriptName = record.get('scriptname'),
+                            enabled = record.get('enabled');
 
-                // matches the incorrect list parsing when BB code is used within list items
-                listRe: /(<li>.*?)(<\/li>)(.*?)<br>(?=<(li|\/ul)>)/gi,
-
-                loadTicket: function (grid, dock, tid) {
-                    var me = this;
-                    if (dock || grid.getStore().isLoaded()) {
-                        grid.setShowLoading('{{Loading_Ticket_mask}{Loading ticket...}}');
-                    }
-                    PortalAction.getTicket(tid, function (result) {
-                        grid.setShowLoading(null);
-                        if (result.success) {
-                            var ticket = result.data,
-                                replies = ticket.replies ? Ext.Array.clone(ticket.replies) : [],
-                                width = grid.getWidth() - 300,
-                            //300 is width of ticket grid
-                                reply = grid.getReply(),
-                                subscribe;
-                            ticket.last_post_time = Ext.Date.parse(ticket.last_post_time, 'c');
-                            ticket.open_date = Ext.Date.parse(ticket.open_date, 'c');
-                            grid.suspendLayouts();
-                            replies.unshift({
-                                attachment_id:        ticket.attachment_id,
-                                attachment_mime_type: ticket.attachment_mime_type,
-                                attachment_name:      ticket.attachment_name,
-                                display_name:         ticket.display_name,
-                                notes:                ticket.notes ? Ext.Array.clone(ticket.notes) : null,
-                                reply_body:           ticket.description,
-                                raw_body:             ticket.raw_text,
-                                receive_email:        ticket.receive_email,
-                                renew_date:           ticket.renew_date,
-                                reply_date:           ticket.open_date,
-                                tid:                  ticket.tid,
-                                uid:                  ticket.uid
+                        // ensure both properties weren't supplied
+                        if (fn && scriptName) {
+                            Ext.log({
+                                level: 'warn',
+                                msg:   Ext.String.format('Unable to apply \'{0}\'. \'fn\' and \'scriptname\' must be mutually exclusive.', id)
                             });
-
-                            Ext.Array.forEach(replies, function (reply, index, replies) {
-                                var text = reply.reply_body;
-
-                                // wrap remaining URL matches in anchor tag
-                                text = text.replace(me.urlRe, '<a target="_blank" href="$1">$1</a>');
-
-                                // replace rogue </li> at correct position
-                                text = text.replace(me.listRe, '$1$3</li>');
-
-                                reply.reply_body = text;
-                            });
-
-                            if (dock) {
-                                dock.setTicket(ticket);
-                                dock.getStore().loadData(replies);
-                                dock.reply = reply;
-                                dock.updateReply(reply);
-                            } else {
-                                dock = grid.ticketDock = new Portal.view.ticket.View({
-                                    dock:      'right',
-                                    width:     width,
-                                    margin:    '0 0 0 10',
-                                    reply:     reply,
-                                    ticket:    ticket,
-                                    resizable: {
-                                        handles: 'w'
-                                    },
-                                    store:     {
-                                        model: 'Portal.model.ticket.Reply',
-                                        data:  replies
-                                    }
-                                });
-                                grid.addDocked(dock);
-                            }
-                            grid.getSelectionModel().getNumbererColumn().hide();
-                            dock.lookupReference('ticketDetails').update(ticket);
-                            grid.cacheColumns();
-                            grid.reconfigure(null, [
-                                grid.collapsedColumn
-                            ]);
-                            grid.resumeLayouts(true);
-                            subscribe = dock.lookupReference('subscribeField');
-                            subscribe.suspendEvents(false);
-                            subscribe.setValue(ticket.subscribed);
-                            subscribe.resumeEvents(true);
-                        } else {
-                            Ext.Msg.alert('{{Ticket_Not_Found_Title}{Ticket Not Found}}', result.msg || '{{Ticket_Not_Found_Body}{That ticket was not found. You will be returned to the ticket grid.}}', function () {
-                                me.redirectTo('ticket');
-                            });
+                            return;
                         }
-                    });
-                }
-            });
-
-            /* ************************************************************************ */
-
-            /**
-             * IMPROVEMENT (PORTAL-491)
-             *
-             * Forces the minimum value of the Credits Used field to be 0. Otherwise,
-             * it's possible to apply negative credits to a ticket and skew the output,
-             * perhaps even give more credits than the purchased depending on how the
-             * server handles this value.
-             */
-            Ext.define('override.view.ticket.view.form.Edit', {
-                override: 'Portal.view.ticket.view.form.Edit',
-
-                initComponent: function () {
-                    var me = this;
-
-                    me.callParent(arguments);
-                    me.lookupReference('ticket_form').down('[name=xcredits]').setMinValue(0);
-                }
-            });
-
-            /* ************************************************************************ */
-
-            /**
-             * IMPROVEMENT
-             *
-             * Preserves the scroll position of the ticket grid during refresh
-             */
-            Ext.define('override.view.ticket.Grid', {
-                override: 'Portal.view.ticket.Grid',
-
-                constructor: function (config) {
-                    Ext.apply(this.viewConfig, {
-                        preserveScrollOnReload: true
-                    });
-                    this.callParent(arguments);
-                }
-            });
-
-            /* ************************************************************************ */
-
-            /**
-             * BUG FIX (PORTAL-482)
-             *
-             * Fixes issue with the Expand All button collapsing any already-expanded
-             * replies.
-             *
-             * This override can't be applied until the portal's override is applied.
-             * We'll loop until we see that the parent override is applied then apply
-             * this one.
-             */
-            var portal482 = setInterval(function () {
-                if (Ext.ClassManager.overrideMap['Override.grid.plugin.RowExpander']) {
-                    Ext.define('override.grid.plugin.RowExpander', {
-                        override: 'Ext.grid.plugin.RowExpander',
-
-                        expandAll: function () {
-                            var me = this,
-                                records = me.recordsExpanded,
-                                grid = me.grid,
-                                store = grid.getStore();
-                            if (store && store.getCount()) {
-                                store.each(function (record, idx) {
-                                    // don't toggle rows already expanded
-                                    if (!records[record.internalId]) {
-                                        me.toggleRow(idx, record);
-                                    }
-                                });
-                            }
-                            return this;
+                        // make sure it's enabled for the user
+                        else if (!enabled) {
+                            return;
                         }
-                    });
 
-                    clearInterval(portal482);
-                }
-            }, 10);
+                        // invoke the function
+                        if (fn) {
+                            try {
+                                fn.apply(this, [id]);
+                                fnSuccess(id);
+                            } catch (e) {
+                                fnError(id, e);
+                            }
+                        }
 
-            /* ************************************************************************ */
-
-            /**
-             * TODO
-             * BUG FIX (PORTAL-468)
-             *
-             * When submitting a ticket reply that fails (usually upload is too large),
-             * the load mask is not removed. There's no way to handle the failure
-             * currently. EXTJS-5762 will provide a fix to ensure that either the
-             * request failure callback is invoked and/or at the very least the
-             * 'exception' event is fired from the direct manager so that we can manually
-             * remove the mask.
-             */
-
-            /* ************************************************************************ */
-
-            /**
-             * IMPROVEMENT (PORTAL-466)
-             *
-             * Enable text selection in the panel header
-             */
-            Ext.define('override.panel.Header', {
-                override: 'Ext.panel.Header',
-
-                beforeRender: function () {
-                    var me = this,
-                        itemPosition = me.itemPosition;
-
-                    me.callSuper();
-
-                    if (itemPosition !== undefined) {
-                        me.insert(itemPosition, me._userItems);
-                    }
-                }
-            });
-
-            /* ************************************************************************ */
-
-            /**
-             * IMPROVEMENT
-             *
-             * Adds ticket number as a link in the info section
-             */
-            Ext.define('override.view.ticket.view.Info', {
-                override: 'Portal.view.ticket.view.Info',
-
-                cachedConfig: {
-                    tpl: [
-                             '<tpl exec="this.isCollapsed = this.getFromScope(\'collapsed\')"></tpl>',
-                             '<div class="header">',
-                             'Ticket Info: <a href="#ticket-{tid}">{tid}</a>',
-                             '<div class="collapse x-fa fa-chevron-up<tpl if="this.isCollapsed"> ',
-                             Ext.baseCSSPrefix,
-                             'hidden-display</tpl>" ext:action="collapse" data-qtip="Collapse ticket info"></div>',
-                             '<div class="expand x-fa fa-chevron-down<tpl if="!this.isCollapsed"> ',
-                             Ext.baseCSSPrefix, 'hidden-display</tpl>" ext:action="expand" data-qtip="Expand ticket info"></div>',
-                             '</div>',
-                             '<div class="body">',
-                             '<div class="row">',
-                             '<div><b>Opened By:</b> {[this.linkify(values.display_name, "popup-user-" + values.uid)]}</div>',
-                             '<div><b>Subscription:</b> {subscription_description}</div>',
-                             '</div>',
-                             '<div class="row bottom-border">',
-                             '<div><b>Open Date:</b> {open_date:date("M j `y, g:ia")}</div>',
-                             '<div><b>Company:</b> {[this.linkify(values.company, "popup-subscription-" + values.sid, true)]}</div>',
-                             '</div>',
-                             '<tpl if="Sencha.User.isAdmin()">',
-                             '<div class="row top-border">',
-                             '<div><b>Assigned To:</b> {[this.linkify(values.owner_display_name, "popup-user-" + values.owner)]}</div>',
-                             '<div><b>Status Detail:</b> {status_detail}</div>',
-                             '</div>',
-                             '<div class="row">',
-                             '<div><b>Minutes Worked:</b> {total_minutes_worked:pluralize("min", "mins", "0,0")}</div>',
-                             '<div><b>Tier:</b> {tier}</div>',
-                             '</div>',
-                             '<div class="row bottom-border">',
-                             '<div><b>Override Provided:</b> {[values.override ? "Yes" : "No"]}</div>',
-                             '<div><b>Reason:</b> {reason}</div>',
-                             '</div>',
-                             '</tpl>',
-                             '<div class="row top-border">',
-                             '<div><b>Ticket Type:</b> {ticket_type_text}</div>',
-                             '<div><b>Platforms:</b> {[values.platforms && values.platforms.length ? values.platforms.map(function(platform) { return platform.text; }).join(", ") : "None"]}</div>',
-                             '</div>',
-                             '<div class="row">',
-                             '<div><b>Credits Used:</b> {xcredits} (of {subscription_available_credits:number("0,0")} available)</div>',
-                             '<div><b>Browsers:</b> {[values.browsers && values.browsers.length ? values.browsers.map(function(browser) { return browser.text; }).join(", ") : "None"]}</div>',
-                             '</div>',
-                             '<div class="row">',
-                             '<div><b>Product:</b> {product_name} {product_version}</div>',
-                             '<div><b>Sencha Architect:</b> {[values.product_architect ? "Yes" : "No"]}</div>',
-                             '<div class="edit x-fa fa-pencil" ext:action="edit" data-qtip="Edit ticket info"></div>',
-                             '</div>',
-                             '</div>'
-                         ].join('')
-                }
-            });
-
-            /* ************************************************************************ */
-
-            /**
-             * IMPROVEMENT
-             *
-             * Loading the grid defaults to filtering tickets based on the
-             * logged-in user
-             */
-            Ext.define('override.view.ticket.Grid', {
-                override: 'Portal.view.ticket.Grid',
-
-                constructor: function (config) {
-                    this.config.filters.owner = {
-                        operator: "=",
-                        property: "owner",
-                        root:     "data",
-                        value:    Sencha.User.get('uid')
-                    };
-
-                    this.callParent([config]);
-                }
-            });
-
-            /* ************************************************************************ */
-
-            /**
-             * IMPROVEMENT
-             *
-             * Automatically collapse the west menu based on its previous state.
-             * This isn't based on the collapsed state due to how the width and
-             * classes are applied so it will be expanded when the application
-             * first loads and then automatically collapse.
-             */
-            Ext.define('override.view.main.West', {
-                override: 'Portal.view.main.West',
-
-                stateId: 'west-menu',
-
-                constructor: function (config) {
-                    var me = this;
-
-                    me.callParent([config]);
-
-                    if (me.getState().width === me.collapsedWidth) {
-                        me.on('render', me.collapse, me);
-                    }
-                }
-            });
-
-            /* ************************************************************************ */
-
-            /**
-             * FEATURE
-             *
-             * Adds the ability to save a reply as a draft
-             */
-            Ext.define('override.window.MessageBox', {
-                override: 'Ext.window.MessageBox',
-
-                // Allows for passing 'buttons' config as an Object hash
-                updateButtonText: function () {
-                    var me = this,
-                        buttonText = me.buttonText,
-                        buttons = 0,
-                        btnId,
-                        btn;
-
-                    for (btnId in buttonText) {
-                        if (buttonText.hasOwnProperty(btnId)) {
-                            btn = me.msgButtons[btnId];
-                            if (btn) {
-
-                                if (me.cfg && me.cfg.buttons && Ext.isObject(me.cfg.buttons)) {
-                                    buttons = buttons | Math.pow(2, Ext.Array.indexOf(me.buttonIds, btnId));
+                        // load the remote source; this should be synchronous since it's before Ext.isReady
+                        else {
+                            hasScripts = true;
+                            Ext.Loader.loadScript({
+                                url:     Ext.String.format('{0}{1}', scriptPath, scriptName),
+                                onLoad:  function () {
+                                    fnSuccess(id);
+                                    Ext.Array.remove(scriptsLoaded, id);
+                                },
+                                onError: function () {
+                                    fnError(id);
+                                    Ext.Array.remove(scriptsLoaded, id);
                                 }
-
-                                if (btn.text !== buttonText[btnId]) {
-                                    btn.setText(buttonText[btnId]);
-                                }
-                            }
+                            });
+                            Ext.Array.push(scriptsLoaded, id);
                         }
-                    }
-                    return buttons;
-                }
-            });
-
-            Ext.define('override.view.ticket.view.form.Reply', {
-                override: 'Portal.view.ticket.view.form.Reply',
-
-                constructor: function (config) {
-                    var me = this;
-
-                    me.items[0].bottomToolbar.adminItems.splice(1, 0, {
-                        hidden:    true,
-                        html:      'Draft restored',
-                        xtype:     'component',
-                        reference: 'draftAlert',
-                        cls:       'draft-alert'
                     });
 
-                    me.callParent([config]);
-                },
-
-                expand: function () {
-                    var me = this;
-                    me.callParent(arguments);
-
-                    if (me.mode && me.mode === 'reply') {
-                        me.fireEvent('replyexpand', me);
-                    }
-                }
-            });
-
-            Ext.define('override.view.ticket.view.form.ReplyController', {
-                override: 'Portal.view.ticket.view.form.ReplyController',
-
-                control: {
-                    'portal-ticket-view-form-reply': {
-                        replyexpand: function () {
-                            var hasDraft = this.restoreDraft(),
-                                form = this.getView(),
-                                toolbar = form.down('[bottomToolbar]'),
-                                draftNotice = toolbar.lookupReference('draftAlert');
-
-                            this.clearDraft();
-
-                            if (hasDraft) {
-                                draftNotice.setHidden(false);
-                                draftNotice.getEl().highlight().fadeOut();
+                    if (hasScripts) {
+                        scriptsInterval = setInterval(function () {
+                            if (scriptsLoaded.length === 0) {
+                                clearInterval(scriptsInterval);
+                                Ext.log({outdent: 1, level: 'info', msg: 'Portal customizations applied!'});
                             }
-                        }
-                    }
-                },
-
-                reset: function () {
-                    var me = this,
-                        form = this.getView();
-                    if (form.isDirty()) {
-                        this.dirtyPrompt(function (button) {
-                            // save the reply as a draft
-                            if (button === 'cancel') {
-                                me.saveDraft();
-                                button = 'yes';
-                            }
-
-                            if (button === 'yes') {
-                                form.collapse(form.reset, form);
-                            }
-                        });
+                        }, 1);
                     } else {
-                        form.collapse(form.reset, form);
+                        Ext.log({outdent: 1, level: 'info', msg: 'Portal customizations applied!'});
                     }
-                },
+                });
 
-                dirtyPrompt: function (callback, scope) {
-                    var me = this,
-                        view = me.view,
-                        msg = Ext.Msg;
-                    scope = scope || this;
+            }
+        }, 10),
 
-                    if (view.mode && view.mode !== 'reply') {
-                        me.callParent(arguments);
-                        return;
-                    }
+        initStore = function (customizations) {
+            Ext.define('Customization', {
+                extend: 'Ext.data.Model',
 
-                    msg.show({
-                        title:   '{{Continue_Question}{Continue?}}',
-                        message: '{{Unsaved_Changes_Cancel}{There are unsaved changes which will be lost. Are you sure you want to cancel?}}',
-                        buttons: {
-                            yes:    msg.buttonText.yes,
-                            no:     msg.buttonText.no,
-                            cancel: 'Save as Draft'
-                        },
+                fields: [
+                    {name: 'id', type: 'string', unique: true},
+                    {name: 'text'},
+                    {name: 'description'},
+                    {name: 'type'},
+                    {name: 'required', type: 'boolean', defaultValue: false},
+                    {name: 'fn', type: 'auto'},
+                    {name: 'scriptname'},
+                    {name: 'enabled', type: 'boolean', defaultValue: false}
+                ],
 
-                        fn: function (button) {
-                            if (button === 'yes') {
-                                Sencha.util.General.clearDirty();
-                            }
-                            callback.call(scope, button);
-                        }
-                    });
-                },
-
-                getStorage: function () {
-                    return Ext.util.LocalStorage.get('ticket-draft');
-                },
-
-                getDraftInfo: function () {
-                    var form = this.getView();
-
-                    return {
-                        form:     form,
-                        field:    form.down('textarea'),
-                        storage:  this.getStorage(),
-                        ticketId: form.getTid()
-                    };
-                },
-
-                saveDraft: function () {
-                    var info = this.getDraftInfo(),
-                        value = info.field.getValue();
-
-                    info.storage.setItem(info.ticketId, value);
-                    info.storage.release();
-                },
-
-                restoreDraft: function () {
-                    var info = this.getDraftInfo(),
-                        draft = info.storage.getItem(info.ticketId);
-
-                    info.field.setValue(draft || null);
-                    info.storage.release();
-
-                    return draft !== null;
-                },
-
-                clearDraft: function () {
-                    var info = this.getDraftInfo();
-
-                    info.storage.removeItem(info.ticketId);
-                    info.storage.release();
+                proxy: {
+                    type: 'memory' // really wish the LocalStorage proxy was available...
                 }
             });
 
-            /* ************************************************************************ */
+            var store = Ext.create('Ext.data.Store', {
+                    storeId:   'portal-customizations',
+                    model:     'Customization',
+                    autoLoad:  true,
+                    autoSync:  true,
+                    listeners: {
+                        write: function (store, operation) {
+                            // there should always be only 1 record since the sync is made per action
+                            var record = operation.getRecords()[0];
+                            storage.setItem(record.get('id'), record.get('enabled'));
+                        }
+                    }
+                }),
+                storage = Ext.util.LocalStorage.get('portal-customizations');
 
-            /* ***************** Place additional fixes above ***************** */
-            /* **************************************************************** */
-            window.console && console.info && console.info('Portal fixes applied');
-            clearInterval(interval);
-        }
-    }, 10);
+            Ext.iterate(customizations, function (key, value) {
+                store.add({
+                    id:          key,
+                    text:        value.text || key,
+                    description: value.description,
+                    type:        value.type,
+                    required:    value.required,
+                    fn:          value.fn,
+                    scriptname:  value.scriptname,
+                    enabled:     value.required === true || storage.getItem(key) === 'true'
+                });
+            });
+
+            return store;
+        };
 })();
