@@ -13,6 +13,7 @@ Ext.define('Customization.view.Customizations', {
             value:    false
         }]
     },
+    ui:          'blue-panel',
     title:       'Available Customizations',
     columnLines: true,
     columns:     [{
@@ -57,8 +58,7 @@ Ext.define('Customization.view.Customizations', {
         groupHeaderTpl: '{name:capitalize}'
     }],
     viewConfig:  {
-        stripeRows: true,
-        emptyText:  'There are no customizations to configure'
+        emptyText: 'There are no customizations to configure'
     },
     tbar:        {
         xtype:  'container',
@@ -75,6 +75,8 @@ Ext.define('Customization.view.Customizations', {
                 {
                     xtype:   'button',
                     text:    'Reload Application',
+                    ui:      'blue-button',
+                    iconCls: 'x-fa fa-refresh',
                     handler: function () {
                         window.location.reload(false);
                     }
