@@ -1,18 +1,113 @@
+Ext.define('Override.app.ViewModel', {
+    override: 'Ext.app.ViewModel',
+
+    privates: {
+        onStoreBind: function (cfg, oldValue, binding) {
+            var me = this;
+            me.callParent(arguments);
+            var info = me.storeInfo,
+                key = binding.$storeKey,
+                store = info[key];
+            if (store) {
+                store.fireEvent('storebind', store, me);
+            }
+        },
+
+        applyStores: function (stores) {
+            var me = this,
+                root = me.getRoot(),
+                key, cfg, storeBind, stub, listeners, isStatic;
+
+            me.storeInfo = {};
+            me.listenerScopeFn = function () {
+                return me.getView().getInheritedConfig('defaultListenerScope');
+            };
+            for (key in stores) {
+                cfg = stores[key];
+                if (cfg.isStore) {
+                    cfg.$wasInstance = true;
+                    me.setupStore(cfg, key);
+                    continue;
+                } else if (Ext.isString(cfg)) {
+                    cfg = {
+                        source: cfg
+                    };
+                } else {
+                    cfg = Ext.apply({}, cfg);
+                }
+                // Get rid of listeners so they don't get considered as a bind
+                listeners = cfg.listeners;
+                delete cfg.listeners;
+                storeBind = me.bind(cfg, me.onStoreBind, me, {trackStatics: true});
+                if (storeBind.isStatic()) {
+                    // Everything is static, we don't need to wait, so remove the
+                    // binding because it will only fire the first time.
+                    storeBind.destroy();
+                    me.createStore(key, cfg, listeners);
+                } else {
+                    storeBind.$storeKey = key;
+                    storeBind.$listeners = listeners;
+                    stub = root.createStubChild(key);
+                    stub.setStore(storeBind);
+                }
+
+                cfg = this.storeInfo[key];
+
+                if (cfg && cfg.isStore) {
+                    cfg.fireEvent('storebind', cfg, me);
+                }
+            }
+        }
+    }
+})
+
 Ext.define('Customization.view.Customizations', {
     extend: 'Ext.grid.Panel',
     alias:  'widget.customsgrid',
 
-    store:       {
-        type:       'chained',
-        source:     'portal-customizations',
-        groupField: 'type',
+    viewModel: {
+        data:     {
+            recordsModified: 0
+        },
+        formulas: {
+            modified: {
+                get: function (get) {
+                    return get('recordsModified') > 0;
+                },
 
-        // only show the ones that aren't forced to be enabled
-        filters: [{
-            property: 'required',
-            value:    false
-        }]
+                set: function (record) {
+                    this.set('recordsModified', this.get('recordsModified') + 1);
+                }
+            }
+        },
+
+        stores: {
+            customizations: {
+                type:       'chained',
+                source:     'portal-customizations',
+                groupField: 'type',
+
+                // only show the ones that aren't forced to be enabled
+                filters: [{
+                    property: 'required',
+                    value:    false
+                }],
+
+                listeners: {
+                    storebind: function (store, viewModel) {
+                        store.on('update', function (store, record) {
+                            viewModel.set('modified', record);
+                        });
+                    }
+                }
+            }
+        }
     },
+
+    bind: {
+        store: '{customizations}'
+    },
+
     ui:          'blue-panel',
     title:       'Available Customizations',
     columnLines: true,
@@ -60,8 +155,14 @@ Ext.define('Customization.view.Customizations', {
     viewConfig:  {
         emptyText: 'There are no customizations to configure'
     },
-    tbar:        {
+    bbar:        {
         xtype:  'container',
+        bind:   {
+            hidden: {
+                bindTo: '{!modified}',
+                deep:   true
+            }
+        },
         layout: 'center',
         items:  [{
             layout: {

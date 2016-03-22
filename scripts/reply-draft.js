@@ -35,20 +35,18 @@ Ext.define('Override.view.ticket.TicketContainerController', {
 Ext.define('Override.view.ticket.form.Reply', {
     override: 'Portal.view.ticket.form.Reply',
 
-    constructor: function (config) {
-        var me = this;
+    initComponent: function () {
+        var me = this,
+            button;
+        me.callParent();
 
-        me.items[0].bottomToolbar.adminItems.splice(1, 0, {
-            hidden:    true,
-            hideMode:  'visibility',
-            html:      null,
-            xtype:     'component',
-            reference: 'draftAlert',
-            cls:       'draft-alert',
-            flex:      1
+        button = me.down('[reference=submitButton]');
+        button.actionMenu.splice(0, 0, {
+            text:    'Save Reply as Draft',
+            handler: function () {
+                this.lookupReferenceHolder().getView().fireEvent('savedraft');
+            }
         });
-
-        me.callParent([config]);
     },
 
     expand: function () {
@@ -70,60 +68,11 @@ Ext.define('Override.view.ticket.form.ReplyController', {
                 var me = this,
                     hasDraft = me.restoreDraft();
                 me.clearDraft();
-
-                if (hasDraft) {
-                    me.draftNotice('Draft not saved', 'warn', true);
-                }
-            },
-
-            draftsaved: function () {
-                this.draftNotice('Draft saved', 'info');
-            },
-
-            formsubmit: function () {
-                this.clearDraft();
             }
         },
 
-        'portal-ticket-form-reply sencha-abstracts-field-textarea': {
-            keypress: {
-                // save the draft if a key hasn't been pressed after 5 seconds
-                buffer: 5000,
-                fn:     function () {
-                    var me = this;
-                    me.saveDraft();
-                }
-            }
-        }
-    },
-
-    submit: function (options) {
-        var me = this,
-            form = me.getView();
-
-        me.callParent([options]);
-
-        if (form.isValid()) {
-            form.fireEvent('formsubmit', me);
-        }
-
-    },
-
-    draftNotice: function (text, type, keep) {
-        var form = this.getView(),
-            toolbar = form.down('[bottomToolbar]'),
-            draftNotice = toolbar.lookupReference('draftAlert'),
-            el = draftNotice.getEl(),
-            textCfg = {
-                info: {icon: 'x-fa fa-info-circle'},
-                warn: {icon: 'x-fa fa-exclamation-circle', color: 'ff9e9e'}
-            };
-
-        el.setHtml(Ext.String.format('<span class="{1}">{0}</span>', text, textCfg[type].icon));
-        draftNotice.setHidden(false);
-        el.highlight(textCfg[type].color || null);
-        if (keep !== true) {
-            el.slideOut('r', {delay: 1500});
+        'sencha-abstracts-field-bbcode': {
+            savedraft: 'handleSaveDraft'
         }
     },
 
@@ -142,6 +91,11 @@ Ext.define('Override.view.ticket.form.ReplyController', {
             storage:  this.getStorage(),
             ticketId: vm.get('tid')
         };
+    },
+
+    handleSaveDraft: function () {
+        this.saveDraft();
+        this.getView().collapse();
     },
 
     saveDraft: function () {
