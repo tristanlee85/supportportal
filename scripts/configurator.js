@@ -122,16 +122,9 @@ Ext.define('Customization.view.Configurator', {
     viewModel:  'configurator',
     controller: 'configurator',
 
-    layout: 'anchor',
-
     defaults: {
-        anchor: '100%'
+        labelAlign: 'left'
     },
-
-    bind: {
-        title: '{title}'
-    },
-
     buttons: [{
         text:    'Cancel',
         ui:      'blue-button',
@@ -169,8 +162,6 @@ Ext.define('Customization.view.ConfiguratorWindow', {
     extend:     'Sencha.view.abstracts.Window',
     controller: 'configuratorwin',
 
-    height: 425,
-    width:  500,
     modal:  true,
     layout: {
         type: 'fit'

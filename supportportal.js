@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name SenchaPortal
 // @namespace SenchaPortal
-// @version 2.1.0.10
+// @version 2.1.0.11
 // @description Contains customizations to be applied to the portal
 // @author Tristan Lee
 // @match https://test-support.sencha.com
@@ -56,6 +56,7 @@
      * - type : String (required) - can be one of the following: bug|improvement|feature
      * - force : Boolean (optional) - if `true`, this customization will always be enabled
      * - requires: String/String[] - list of dependency customizations to be loaded prior; reference the customization name, not a class name
+     * - requiresOverride: String/String[] - list of dependency classes that need to be loaded prior
      * - fn : Function (required) - mutually exclusive to `scriptname`, this contains the heart of the customization
      * - scriptname : String (required) - mutually exclusive to `fn`, this loads a remote customization (eg. reply-draft.js)
      */
@@ -71,10 +72,15 @@
             }
         },
 
+        'utils': {
+            force:      true,
+            scriptname: 'utils.js'
+        },
+
         'configurator': {
-            force:       true,
-            requires:    ['utils'],
-            scriptname:  'configurator.js'
+            force:      true,
+            requires:   ['utils'],
+            scriptname: 'configurator.js'
         },
 
         'credits-scroll': {
@@ -120,9 +126,14 @@
             scriptname:  'my-tickets-mini-grid.js'
         },
 
-        'utils': {
-            force:      true,
-            scriptname: 'utils.js'
+        'smart-date-format': {
+            text:             'Smart Date Formatting',
+            description:      'Toggle the use of smart date formatting or cusotmize it to fit your needs',
+            type:             'improvement',
+            scriptname:       'smart-date-format.js',
+            requires:         ['configurator', 'utils'],
+            requiresOverride: 'Override.Date',
+            configurator:     'Customization.view.smartdate.Configurator'
         }
     };
 
@@ -167,6 +178,7 @@
                             scriptName = record.get('scriptname'),
                             enabled = record.get('enabled'),
                             requires = record.get('requires'),
+                            requiresOverride = record.get('requiresOverride'),
                             requiresInterval, loaderFn;
 
                         // ensure both properties weren't supplied
@@ -221,7 +233,7 @@
                         }(record));
 
 
-                        if (!requires) {
+                        if (!requires && !requiresOverride) {
                             loaderFn();
                         } else {
 
@@ -230,24 +242,48 @@
                             requiresInterval = setInterval(function () {
                                 var allRequired = true;
 
-                                if (Ext.isString(requires)) {
-                                    requires = [requires];
-                                } else if (!Ext.isArray(requires)) {
-                                    Ext.log({
-                                        type: 'warn',
-                                        msg:  Ext.String.format('Unable to require the customizations for \'{0}\'', id),
-                                        dump: requires
+
+                                if (!!requires) {
+                                    if (Ext.isString(requires)) {
+                                        requires = [requires];
+                                    } else if (!Ext.isArray(requires)) {
+                                        Ext.log({
+                                            type: 'warn',
+                                            msg:  Ext.String.format('Unable to require the customizations for \'{0}\'', id),
+                                            dump: requires
+                                        });
+                                        clearInterval(requiresInterval);
+                                    }
+
+                                    // check to make sure all dependency scripts are loaded
+                                    Ext.Array.forEach(requires, function (item) {
+                                        if (!Ext.Array.contains(scriptsLoaded, item)) {
+                                            return (allRequired = false);
+
+                                        }
                                     });
-                                    clearInterval(requiresInterval);
                                 }
 
-                                // check to make sure all dependency scripts are loaded
-                                Ext.Array.forEach(requires, function (item) {
-                                    if (!Ext.Array.contains(scriptsLoaded, item)) {
-                                        return (allRequired = false);
-
+                                if (!!requiresOverride) {
+                                    if (Ext.isString(requiresOverride)) {
+                                        requiresOverride = [requiresOverride];
+                                    } else if (!Ext.isArray(requiresOverride)) {
+                                        Ext.log({
+                                            type: 'warn',
+                                            msg:  Ext.String.format('Unable to require the override(s) for \'{0}\'', id),
+                                            dump: requiresOverride
+                                        });
+                                        clearInterval(requiresInterval);
                                     }
-                                });
+
+                                    // check to make sure all dependency overrides are loaded
+                                    Ext.Array.forEach(requiresOverride, function (item) {
+                                        if (!Ext.ClassManager.overrideMap[item]) {
+                                            return (allRequired = false);
+
+                                        }
+                                    });
+                                }
 
                                 if (allRequired) {
                                     clearInterval(requiresInterval);
@@ -283,6 +319,7 @@
                     {name: 'scriptname'},
                     {name: 'configurator', type: 'string'},
                     {name: 'requires', type: 'auto'},
+                    {name: 'requiresOverride', type: 'auto'},
                     {name: 'enabled', type: 'boolean', defaultValue: false},
                     {name: 'refreshRequired', type: 'boolean'}
                 ],
@@ -310,17 +347,18 @@
             Ext.iterate(customizations, function (key, value) {
                 var enabled = value.force === true || storage.getItem(key) === 'true';
                 store.add({
-                    id:              key,
-                    text:            value.text || key,
-                    description:     value.description,
-                    type:            value.type,
-                    force:           value.force,
-                    fn:              value.fn,
-                    scriptname:      value.scriptname,
-                    configurator:    value.configurator,
-                    requires:        value.requires,
-                    enabled:         enabled,
-                    refreshRequired: !enabled
+                    id:               key,
+                    text:             value.text || key,
+                    description:      value.description,
+                    type:             value.type,
+                    force:            value.force,
+                    fn:               value.fn,
+                    scriptname:       value.scriptname,
+                    configurator:     value.configurator,
+                    requires:         value.requires,
+                    requiresOverride: value.requiresOverride,
+                    enabled:          enabled,
+                    refreshRequired:  !enabled
                 });
             });
 
