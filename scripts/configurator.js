@@ -233,7 +233,7 @@ Ext.define('Customization.view.CustomizationsController', {
 
     showConfigurator: function (grid, rowIdx, colIdx, meta, event, record) {
         var cls = record.get('configurator'),
-            instance;
+            instance, win;
 
         try {
             instance = Ext.create(cls);
@@ -245,11 +245,12 @@ Ext.define('Customization.view.CustomizationsController', {
                 // give it reference to the customization record
                 instance.getViewModel().set('customizationRecord', record);
 
-                Ext.create('Customization.view.ConfiguratorWindow', {
+                win = Ext.create('Customization.view.ConfiguratorWindow', {
                     items: [instance]
                 }).show();
             }
         } catch (e) {
+            win.destroy();
             Ext.log({
                 msg:   'Unable to load configurator',
                 level: 'error',
@@ -312,7 +313,7 @@ Ext.define('Customization.view.Customizations', {
                 return 'x-fa fa-fw fa-cog';
             },
             isDisabled: function (view, rowIdx, colIdx, item, record) {
-                return !record.get('configurator');
+                return !record.get('configurator') || record.get('refreshRequired');
             },
             handler:    'showConfigurator'
         }]

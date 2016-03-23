@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SenchaPortal
 // @namespace    SenchaPortal
-// @version      2.1.0.5
+// @version      2.1.0.6
 // @description  Contains customizations to be applied to the portal
 // @author       Tristan Lee
 // @match        https://test-support.sencha.com
@@ -69,12 +69,10 @@
             }
         },
 
-        'settings-custom': {
-            description: 'Adds a menu item for toggling customizations',
-            type:        'feature',
+        'configurator': {
             force:       true,
             requires:    ['utils'],
-            scriptname:  'settings-custom.js'
+            scriptname:  'configurator.js'
         },
 
         'credits-scroll': {
@@ -283,7 +281,8 @@
                     {name: 'scriptname'},
                     {name: 'configurator', type: 'string'},
                     {name: 'requires', type: 'auto'},
-                    {name: 'enabled', type: 'boolean', defaultValue: false}
+                    {name: 'enabled', type: 'boolean', defaultValue: false},
+                    {name: 'refreshRequired', type: 'boolean'}
                 ],
 
                 proxy: {
@@ -307,17 +306,19 @@
                 storage = Ext.util.LocalStorage.get('portal-customizations');
 
             Ext.iterate(customizations, function (key, value) {
+                var enabled = value.force === true || storage.getItem(key) === 'true';
                 store.add({
-                    id:           key,
-                    text:         value.text || key,
-                    description:  value.description,
-                    type:         value.type,
-                    force:        value.force,
-                    fn:           value.fn,
-                    scriptname:   value.scriptname,
-                    configurator: value.configurator,
-                    requires:     value.requires,
-                    enabled:      value.force === true || storage.getItem(key) === 'true'
+                    id:              key,
+                    text:            value.text || key,
+                    description:     value.description,
+                    type:            value.type,
+                    force:           value.force,
+                    fn:              value.fn,
+                    scriptname:      value.scriptname,
+                    configurator:    value.configurator,
+                    requires:        value.requires,
+                    enabled:         enabled,
+                    refreshRequired: !enabled
                 });
             });
 
