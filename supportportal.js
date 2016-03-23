@@ -1,11 +1,11 @@
 // ==UserScript==
-// @name         SenchaPortal
-// @namespace    SenchaPortal
-// @version      2.1.0.9
-// @description  Contains customizations to be applied to the portal
-// @author       Tristan Lee
-// @match        https://test-support.sencha.com
-// @grant        none
+// @name SenchaPortal
+// @namespace SenchaPortal
+// @version 2.1.0.10
+// @description Contains customizations to be applied to the portal
+// @author Tristan Lee
+// @match https://test-support.sencha.com
+// @grant none
 // @downloadURL https://rawgit.com/tristanlee85/supportportal/master/supportportal.js
 // @updateURL https://rawgit.com/tristanlee85/supportportal/master/supportportal.js
 // ==/UserScript==
