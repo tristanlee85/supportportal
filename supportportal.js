@@ -6,6 +6,8 @@
 // @author       Tristan Lee
 // @match        https://test-support.sencha.com
 // @grant        none
+// @downloadURL https://rawgit.com/tristanlee85/supportportal/master/supportportal.js
+// @updateURL https://rawgit.com/tristanlee85/supportportal/master/supportportal.js
 // ==/UserScript==
 
 (function () {
