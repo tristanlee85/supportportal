@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SenchaPortal
 // @namespace    SenchaPortal
-// @version      2.1.0.6
+// @version      2.1.0.7
 // @description  Contains customizations to be applied to the portal
 // @author       Tristan Lee
 // @match        https://test-support.sencha.com
@@ -23,7 +23,7 @@
          * type. Otherwise, they are received as text/plain and will not be executed.
          * @type {string}
          */
-        remoteScriptPath = '//rawgit.com/tristanlee85/supportportal/2.1.x/scripts/',
+        remoteScriptPath = '//rawgit.com/tristanlee85/supportportal/master/scripts/',
 
         /**
          * The local path for loading scripts during development.
