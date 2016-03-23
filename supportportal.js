@@ -52,7 +52,8 @@
      * - text : String (optional) - friendly display name for the customization
      * - description : String (optional) - short description about the customization
      * - type : String (required) - can be one of the following: bug|improvement|feature
-     * - required : Boolean (optional) - if `true`, this customization will always be enabled
+     * - force : Boolean (optional) - if `true`, this customization will always be enabled
+     * - requires: String/String[] - list of dependency customizations to be loaded prior; reference the customization name, not a class name
      * - fn : Function (required) - mutually exclusive to `scriptname`, this contains the heart of the customization
      * - scriptname : String (required) - mutually exclusive to `fn`, this loads a remote customization (eg. reply-draft.js)
      */
@@ -71,7 +72,8 @@
         'settings-custom': {
             description: 'Adds a menu item for toggling customizations',
             type:        'feature',
-            required:    true,
+            force:       true,
+            requires:    ['utils'],
             scriptname:  'settings-custom.js'
         },
 
@@ -116,6 +118,11 @@
             description: 'Forces the full and mini grid to only show tickets assigned to you',
             type:        'feature',
             scriptname:  'my-tickets-mini-grid.js'
+        },
+
+        'utils': {
+            force:      true,
+            scriptname: 'utils.js'
         }
     };
 
@@ -147,6 +154,7 @@
                 Ext.Microloader.onMicroloaderReady(function () {
                     var hasScripts = false,
                         scriptsLoaded = [],
+                        scriptsToLoad = 0,
                         scriptsInterval;
 
                     // initialize the store with available customizations
@@ -157,7 +165,9 @@
                         var id = record.get('id'),
                             fn = record.get('fn'),
                             scriptName = record.get('scriptname'),
-                            enabled = record.get('enabled');
+                            enabled = record.get('enabled'),
+                            requires = record.get('requires'),
+                            requiresInterval, loaderFn;
 
                         // ensure both properties weren't supplied
                         if (fn && scriptName) {
@@ -172,44 +182,88 @@
                             return;
                         }
 
-                        // invoke the function
-                        if (fn) {
-                            try {
-                                fn.apply(this, [id]);
-                                fnSuccess(id);
-                            } catch (e) {
-                                fnError(id, e);
-                            }
-                        }
+                        ++scriptsToLoad;
 
-                        // load the remote source; this should be synchronous since it's before Ext.isReady
-                        else {
-                            hasScripts = true;
-                            Ext.Loader.loadScript({
-                                url:     Ext.String.format('{0}{1}', scriptPath, scriptName),
-                                onLoad:  function () {
-                                    fnSuccess(id);
-                                    Ext.Array.remove(scriptsLoaded, id);
-                                },
-                                onError: function () {
-                                    fnError(id);
-                                    Ext.Array.remove(scriptsLoaded, id);
+                        loaderFn = (function (record) {
+                            var id = record.get('id'),
+                                fn = record.get('fn'),
+                                scriptName = record.get('scriptname');
+
+                            return function () {
+                                // invoke the function
+                                if (fn) {
+                                    try {
+                                        fn.apply(this, [id]);
+                                        fnSuccess(id);
+                                    } catch (e) {
+                                        fnError(id, e);
+                                    } finally {
+                                        Ext.Array.push(scriptsLoaded, id);
+                                    }
                                 }
-                            });
-                            Ext.Array.push(scriptsLoaded, id);
+
+                                // load the remote source; this should be synchronous since it's before Ext.isReady
+                                else {
+                                    hasScripts = true;
+                                    Ext.Loader.loadScript({
+                                        url:     Ext.String.format('{0}{1}', scriptPath, scriptName),
+                                        onLoad:  function () {
+                                            fnSuccess(id);
+                                            Ext.Array.push(scriptsLoaded, id);
+                                        },
+                                        onError: function () {
+                                            fnError(id);
+                                            Ext.Array.push(scriptsLoaded, id);
+                                        }
+                                    });
+                                }
+                            }
+                        }(record));
+
+
+                        if (!requires) {
+                            loaderFn();
+                        } else {
+
+                            // Let's hope no one went crazy with a circular reference.
+                            // This is not fool-proof.
+                            requiresInterval = setInterval(function () {
+                                var allRequired = true;
+
+                                if (Ext.isString(requires)) {
+                                    requires = [requires];
+                                } else if (!Ext.isArray(requires)) {
+                                    Ext.log({
+                                        type: 'warn',
+                                        msg:  Ext.String.format('Unable to require the customizations for \'{0}\'', id),
+                                        dump: requires
+                                    });
+                                    clearInterval(requiresInterval);
+                                }
+
+                                // check to make sure all dependency scripts are loaded
+                                Ext.Array.forEach(requires, function (item) {
+                                    if (!Ext.Array.contains(scriptsLoaded, item)) {
+                                        return (allRequired = false);
+
+                                    }
+                                });
+
+                                if (allRequired) {
+                                    clearInterval(requiresInterval);
+                                    loaderFn();
+                                }
+                            }, 10);
                         }
                     });
 
-                    if (hasScripts) {
-                        scriptsInterval = setInterval(function () {
-                            if (scriptsLoaded.length === 0) {
-                                clearInterval(scriptsInterval);
-                                Ext.log({outdent: 1, level: 'info', msg: 'Portal customizations applied!'});
-                            }
-                        }, 1);
-                    } else {
-                        Ext.log({outdent: 1, level: 'info', msg: 'Portal customizations applied!'});
-                    }
+                    // wait for everything, including external resources, to complete
+                    scriptsInterval = setInterval(function () {
+                        if (scriptsLoaded.length === scriptsToLoad) {
+                            clearInterval(scriptsInterval);
+                            Ext.log({outdent: 1, level: 'info', msg: 'Portal customizations applied!'});
+                        }
+                    }, 10);
                 });
 
             }
@@ -224,9 +278,11 @@
                     {name: 'text'},
                     {name: 'description'},
                     {name: 'type'},
-                    {name: 'required', type: 'boolean', defaultValue: false},
+                    {name: 'force', type: 'boolean', defaultValue: false},
                     {name: 'fn', type: 'auto'},
                     {name: 'scriptname'},
+                    {name: 'configurator', type: 'string'},
+                    {name: 'requires', type: 'auto'},
                     {name: 'enabled', type: 'boolean', defaultValue: false}
                 ],
 
@@ -252,14 +308,16 @@
 
             Ext.iterate(customizations, function (key, value) {
                 store.add({
-                    id:          key,
-                    text:        value.text || key,
-                    description: value.description,
-                    type:        value.type,
-                    required:    value.required,
-                    fn:          value.fn,
-                    scriptname:  value.scriptname,
-                    enabled:     value.required === true || storage.getItem(key) === 'true'
+                    id:           key,
+                    text:         value.text || key,
+                    description:  value.description,
+                    type:         value.type,
+                    force:        value.force,
+                    fn:           value.fn,
+                    scriptname:   value.scriptname,
+                    configurator: value.configurator,
+                    requires:     value.requires,
+                    enabled:      value.force === true || storage.getItem(key) === 'true'
                 });
             });
 

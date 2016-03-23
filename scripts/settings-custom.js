@@ -1,3 +1,7 @@
+/**
+ * This fires a `storebind` event once binding has completed. The purpose for
+ * this is so that there can be context of the ViewModel from the Store.
+ */
 Ext.define('Override.app.ViewModel', {
     override: 'Ext.app.ViewModel',
 
@@ -59,50 +63,209 @@ Ext.define('Override.app.ViewModel', {
             }
         }
     }
-})
+});
 
-Ext.define('Customization.view.Customizations', {
-    extend: 'Ext.grid.Panel',
-    alias:  'widget.customsgrid',
+/**
+ * This class defines the configurator that other classes should extend.
+ */
+Ext.define('Customization.view.ConfiguratorModel', {
+    extend: 'Ext.app.ViewModel',
+    alias:  'viewmodel.configurator',
 
-    viewModel: {
-        data:     {
-            recordsModified: 0
-        },
-        formulas: {
-            modified: {
-                get: function (get) {
-                    return get('recordsModified') > 0;
-                },
+    data: {
+        title:               null,
+        customizationRecord: null
+    }
+});
 
-                set: function (record) {
-                    this.set('recordsModified', this.get('recordsModified') + 1);
-                }
-            }
-        },
+Ext.define('Customization.view.ConfiguratorController', {
+    extend: 'Ext.app.ViewController',
+    alias:  'controller.configurator',
 
-        stores: {
-            customizations: {
-                type:       'chained',
-                source:     'portal-customizations',
-                groupField: 'type',
+    control: {
+        'configurator': {
+            render: 'loadConfiguration'
+        }
+    },
 
-                // only show the ones that aren't forced to be enabled
-                filters: [{
-                    property: 'required',
-                    value:    false
-                }],
+    cancelChanges: function () {
+        this.getView().fireEvent('configcancel');
+    },
 
-                listeners: {
-                    storebind: function (store, viewModel) {
-                        store.on('update', function (store, record) {
-                            viewModel.set('modified', record);
-                        });
-                    }
-                }
+    saveChanges: function () {
+        var view = this.getView(),
+            record = view.getViewModel().get('customizationRecord'),
+            values = view.getValues();
+
+        // We'll just set the form fields and values directly to storage, hoping they are in the right format.
+        Customization.util.Config.setConfiguration(record.get('id'), values);
+
+        view.fireEvent('configsave');
+    },
+
+    loadConfiguration: function () {
+        var view = this.getView(),
+            record = view.getViewModel().get('customizationRecord'),
+            values = Customization.util.Config.getConfiguration(record.get('id')),
+            dataRecord = new Ext.data.Model();
+
+        // TODO: we should not need to defer this, but without it the values do not get set
+        Ext.defer(function () {
+            view.getForm().setValues(values);
+        }, 10);
+    }
+});
+
+Ext.define('Customization.view.Configurator', {
+    extend:     'Sencha.view.abstracts.Form',
+    alias:      'widget.configurator',
+    viewModel:  'configurator',
+    controller: 'configurator',
+
+    layout: 'anchor',
+
+    defaults: {
+        anchor: '100%'
+    },
+
+    bind: {
+        title: '{title}'
+    },
+
+    buttons: [{
+        text:    'Cancel',
+        ui:      'blue-button',
+        handler: 'cancelChanges'
+    }, {
+        text:     'Save Configuration',
+        ui:       'blue-button',
+        formBind: true,
+        disabled: true,
+        handler:  'saveChanges'
+    }]
+});
+
+/**
+ * Classes for the window to contain the configurator
+ */
+Ext.define('Customization.view.ConfiguratorWindowController', {
+    extend: 'Ext.app.ViewController',
+    alias:  'controller.configuratorwin',
+
+    control: {
+        'configurator': {
+            configcancel: 'close',
+            configsave:   'close'
+        }
+    },
+
+    close: function () {
+        this.getView().close();
+    }
+
+});
+
+Ext.define('Customization.view.ConfiguratorWindow', {
+    extend:     'Sencha.view.abstracts.Window',
+    controller: 'configuratorwin',
+
+    height: 425,
+    width:  500,
+    modal:  true,
+    layout: {
+        type: 'fit'
+    },
+    title:  'Configuration'
+});
+
+/**
+ * Grid for displaying the available customizations
+ */
+Ext.define('Customization.view.CustomizationsModel', {
+    extend: 'Ext.app.ViewModel',
+    alias:  'viewmodel.customizations',
+
+    data:     {
+        recordsModified: 0
+    },
+    formulas: {
+        modified: {
+            get: function (get) {
+                return get('recordsModified') > 0;
+            },
+
+            set: function () {
+                this.set('recordsModified', this.get('recordsModified') + 1);
             }
         }
     },
+
+    stores: {
+        customizations: {
+            type:       'chained',
+            source:     'portal-customizations',
+            groupField: 'type',
+
+            // only show the ones that aren't forced to be enabled
+            filters: [{
+                property: 'force',
+                value:    false
+            }],
+
+            listeners: {
+                storebind: function (store, viewModel) {
+                    store.on('update', function (store, record) {
+                        viewModel.set('modified', record);
+                    });
+                }
+            }
+        }
+    }
+});
+
+Ext.define('Customization.view.CustomizationsController', {
+    extend: 'Ext.app.ViewController',
+    alias:  'controller.customizations',
+
+    toggleCustomization: function (grid, rowIdx, colIdx, meta, event, record) {
+        record.set('enabled', !record.get('enabled'));
+    },
+
+    showConfigurator: function (grid, rowIdx, colIdx, meta, event, record) {
+        var cls = record.get('configurator'),
+            instance;
+
+        try {
+            instance = Ext.create(cls);
+
+            if (instance instanceof Customization.view.Configurator) {
+
+                // I'm not sure if this controller should be directly setting
+                // data to the Configurator's VM, but for now it's how we
+                // give it reference to the customization record
+                instance.getViewModel().set('customizationRecord', record);
+
+                Ext.create('Customization.view.ConfiguratorWindow', {
+                    items: [instance]
+                }).show();
+            }
+        } catch (e) {
+            Ext.log({
+                msg:   'Unable to load configurator',
+                level: 'error',
+                dump:  e,
+                stack: true
+            });
+        }
+
+    }
+});
+
+Ext.define('Customization.view.Customizations', {
+    extend:     'Ext.grid.Panel',
+    alias:      'widget.customsgrid',
+    viewModel:  'customizations',
+    controller: 'customizations',
 
     bind: {
         store: '{customizations}'
@@ -126,9 +289,7 @@ Ext.define('Customization.view.Customizations', {
     }, {
         text:      'Type',
         dataIndex: 'type',
-        renderer:  function (v) {
-            return Ext.util.Format.capitalize(v);
-        }
+        renderer:  Ext.util.Format.capitalize
     }, {
         xtype:     'booleancolumn',
         text:      'Enabled',
@@ -138,14 +299,22 @@ Ext.define('Customization.view.Customizations', {
     }, {
         xtype:     'actioncolumn',
         dataIndex: 'enabled',
-        width:     50,
+        width:     75,
         items:     [{
+            tooltip:  'Enable/Disable',
             getClass: function (v, metadata, record) {
-                return ['x-fa', v ? 'fa-toggle-on' : 'fa-toggle-off'].join(' ');
+                return ['x-fa fa-fw', v ? 'fa-toggle-on' : 'fa-toggle-off'].join(' ');
             },
-            handler:  function (grid, rowIdx, colIdx, meta, event, record) {
-                record.set('enabled', !record.get('enabled'));
-            }
+            handler:  'toggleCustomization'
+        }, {
+            tooltip:    'Configure',
+            getClass:   function (v, metadata, record) {
+                return 'x-fa fa-fw fa-cog';
+            },
+            isDisabled: function (view, rowIdx, colIdx, item, record) {
+                return !record.get('configurator');
+            },
+            handler:    'showConfigurator'
         }]
     }],
     features:    [{
@@ -187,6 +356,9 @@ Ext.define('Customization.view.Customizations', {
     }
 });
 
+/**
+ * Adds the route for handling display of the grid
+ */
 Ext.define('Override.util.routers.Settings', {}, function () {
     var map = Portal.util.routers.Settings.getViewMap();
     Ext.merge(map.settings, {custom: {admin: true, fn: 'showSettingCustom'}});
@@ -206,6 +378,9 @@ Ext.define('Override.util.routers.Settings', {}, function () {
     });
 });
 
+/**
+ * Adds the item to the Settings menu
+ */
 Ext.define('override.view.main.West', {
     override: 'Portal.view.main.West',
 
