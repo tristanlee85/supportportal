@@ -1,11 +1,16 @@
 {
   "manifest_version": 2,
   "name": "Support Portal",
+  "version": "2.1.0.10",
   "description": "Adds fixes and enhancements to the Support Portal",
-  "version": "2.1.0.12",
   "browser_action": {
-    "default_icon": "logo.png",
+    "default_icon": "logo_19.png",
     "default_popup": "popup.html"
+  },
+  "icons": {
+    "16": "logo_19.png",
+    "48": "logo_48.png",
+    "128": "logo_128.png"
   },
   "permissions": [
     "activeTab"
@@ -23,5 +28,6 @@
   ],
   "web_accessible_resources": [
     "supportportal.user.js"
-  ]
+  ],
+  "update_url": "https://rawgit.com/tristanlee85/supportportal/master/extension/updates.xml"
 }
