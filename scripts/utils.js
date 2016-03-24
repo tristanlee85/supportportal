@@ -15,8 +15,8 @@ Ext.define('Customization.util.Config', {
         return Ext.String.format('{0}-{1}', id, this.configName);
     },
 
-    getConfiguration: function (id) {
-        return this.decodeValue(this.getStorage().getItem(this.getConfigItemName(id)));
+    getConfiguration: function (id, defaultVal) {
+        return this.decodeValue(this.getStorage().getItem(this.getConfigItemName(id))) || defaultVal;
     },
 
     setConfiguration: function (id, value) {

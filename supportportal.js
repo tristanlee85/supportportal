@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        SenchaPortal
 // @namespace   SenchaPortal
-// @version     2.1.0.11
+// @version     2.1.0.12
 // @description Contains customizations to be applied to the portal
 // @author      Tristan Lee
 // @match       https://test-support.sencha.com
@@ -131,9 +131,18 @@
             description:      'Toggle the use of smart date formatting or cusotmize it to fit your needs',
             type:             'improvement',
             scriptname:       'smart-date-format.js',
-            requires:         ['configurator', 'utils'],
+            requires:         ['configurator'],
             requiresOverride: 'Override.Date',
             configurator:     'Customization.view.smartdate.Configurator'
+        },
+
+        'auto-refresh-grid': {
+            text: 'Auto-Refresh Grid',
+            description: 'Automatically registers the store to the refresh manager',
+            type: 'feature',
+            scriptname: 'auto-refresh-grid.js',
+            requires: ['configurator'],
+            configurator: 'Customization.view.autorefresh.Configurator'
         }
     };
 
