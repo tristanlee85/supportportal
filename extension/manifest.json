@@ -1,0 +1,27 @@
+{
+  "manifest_version": 2,
+  "name": "Support Portal",
+  "description": "Adds fixes and enhancements to the Support Portal",
+  "version": "2.1.0.12",
+  "browser_action": {
+    "default_icon": "logo.png",
+    "default_popup": "popup.html"
+  },
+  "permissions": [
+    "activeTab"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://test-support.sencha.com/*"
+      ],
+      "js": [
+        "contentscript.js"
+      ],
+      "run_at": "document_start"
+    }
+  ],
+  "web_accessible_resources": [
+    "supportportal.user.js"
+  ]
+}
