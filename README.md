@@ -37,7 +37,7 @@ Whenever a customizations is enabled/disabled, or configuration has changed, the
  - Localized ability to enable/disable specific customizations. This functionality can be found under *Settings > Additional Customizations*
  - Disable automatic error-reporting
  - Ticket ID in title header is a link to the production URL for easier copy/paste
- - Reply draft functionality automatically saves your reply as you type. You may return to the ticket later and the reply will be automatically restored. The draft is removed once the reply is sent.
+ - Ability to save a reply as a draft from within the Submit button menu. The draft will be restored when you return to the ticket.
  - Default the tickets grid to only show tickets assigned to you
 
 **Contributions:**
