@@ -1,4 +1,7 @@
-# Support Portal Customizations - v2.1.x
+# This branch is no longer being maintained for Tampermonkey.
+Due to failures to auto-update properly with Tampermonkey, this script is no longer being maintained. Please use the Support Portal Chrome extension for continued functionality.
+
+## Support Portal Customizations - v2.1.x
 **Requirements:**
 
 You must first install the Tampermonkey extension for Chrome
