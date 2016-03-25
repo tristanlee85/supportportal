@@ -56,6 +56,7 @@ window.addEventListener("message", function (event) {
 
         // set the path for loading resources
         if (localDevMode) {
+            window.console && window.console.warn('Support Portal extension in dev mode. Loading scripts from ' + localScriptPath);
             fullConfigPath = stripTrailingSlash(localScriptPath) + configPath;
             fullScriptsPath = stripTrailingSlash(localScriptPath) + scriptsPath;
         } else {
@@ -229,7 +230,7 @@ window.addEventListener("message", function (event) {
                 }
             },
 
-            initStore = function (customizations) {
+            initStore = function (configs) {
                 Ext.define('Customization', {
                     extend: 'Ext.data.Model',
 
@@ -268,7 +269,7 @@ window.addEventListener("message", function (event) {
                     }),
                     storage = Ext.util.LocalStorage.get('portal-customizations');
 
-                Ext.iterate(customizations, function (key, value) {
+                Ext.iterate(configs, function (key, value) {
                     var enabled = value.force === true || storage.getItem(key) === 'true';
                     store.add({
                         id:               key,
@@ -289,13 +290,17 @@ window.addEventListener("message", function (event) {
                 return store;
             },
             s = document.createElement('script'),
-            customizations, interval;
+            configs, interval;
 
-        // load in the customizations config
+        // Variables and the scripts loader is defined. Now we need to load in
+        // the customizations config. Onces this is loaded in, we'll reference
+        // the variable to current scope and then start the loader.
         s.src = fullConfigPath;
         s.onload = function () {
-            // start the main scripts loader
+            this.parentNode.removeChild(this);
+            configs = customizations;
             interval = setInterval(scriptsLoaderFn, 10);
-        }
+        };
+        (document.head || document.documentElement).appendChild(s);
     })(window);
 });
