@@ -17,10 +17,10 @@ s.onload = function () {
         }
 
         var settings = {
-            enableExtension: !!items.enableExtension,
-            localDevMode:    !!items.localDevMode,
-            serverUrl:       items.serverUrl || null,
-            extensionScriptsPath: chrome.extension.getURL('script/scripts/')
+            enableExtension:     !!items.enableExtension,
+            localDevMode:        !!items.localDevMode,
+            serverUrl:           items.serverUrl || null,
+            extensionScriptPath: chrome.extension.getURL('script')
         };
 
         window.postMessage(settings, "*");
