@@ -3,4 +3,5 @@
 .idea
 supportportalfixes.iml
 app.js
+/node_modules
 extension/script
