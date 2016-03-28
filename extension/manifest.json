@@ -1,0 +1,40 @@
+{
+    "manifest_version": 2,
+    "name": "Support Portal",
+    "version": "2.1.0",
+    "description": "Adds fixes and enhancements to the Support Portal",
+    "background": {
+        "scripts": [
+            "background.js"
+        ],
+        "persistent": false
+    },
+    "page_action": {
+        "default_title": "Support Portal",
+        "default_popup": "popup.html",
+        "default_icon": "logo_19.png"
+    },
+    "icons": {
+        "16": "logo_19.png",
+        "48": "logo_48.png",
+        "128": "logo_128.png"
+    },
+    "content_scripts": [{
+        "matches": [
+            "https://test-support.sencha.com/*"
+        ],
+        "js": [
+            "contentscript.js"
+        ],
+        "run_at": "document_start"
+    }],
+    "content_security_policy": "script-src 'self' https://ssl.google-analytics.com; object-src 'self'",
+    "web_accessible_resources": [
+        "script/*"
+    ],
+    "permissions": [
+        "declarativeContent",
+        "activeTab",
+        "storage"
+    ]
+}

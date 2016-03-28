@@ -1,20 +1,11 @@
 # Support Portal Customizations - v2.1.x
 **Requirements:**
 
-You must first install the Tampermonkey extension for Chrome
-(https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo?hl=en)
+To use the Support Portal Customizations, you must install the Chrome extension: https://chrome.google.com/webstore/detail/support-portal/ihaddpnkjclhdanchepbncbajlkkadjc
+**If you are still using the Tampermonkey script, it is no longer being maintained and may fail to work in the future.**
 
- Once the extension has been installed:
- 1. Click the icon and choose *Dashboard*
- 2. Click the *Utilities* tab on the upper-right
- 3. Import the following URL:
- https://rawgit.com/tristanlee85/supportportal/master/supportportal.js
- 4. Click *Install*
-
-After the script is imported, it will be automatically enabled and available immediately. Refresh the portal application.
-Tampermonkey is set to check for script updates daily by default. If you feel that scripts are not being updated
-automatically, you may force an updated under the **Installed Scripts** tab. Simply click on the value under the **Last updated**
-column to force a check.
+Once the extension is installed, just refresh the application and it's ready to use.
+*Note: Chrome checks every few hours for an update so you can be sure you always have the latest version installed.*
 
 This script provides the ability to add your own customizations to the application. Each customization can be
 enabled or disabled based on your need. Additionally, customizations can also have their own configurations for
@@ -43,4 +34,4 @@ Whenever a customizations is enabled/disabled, or configuration has changed, the
 
 **Contributions:**
 
-If you have a fix for additional issues or ideas for enhancements, submit a pull request. By default, Tampermonkey will check daily for updates to the scripts so as new fixes/features are added, you'll be kept up-to-date.
+If you have a fix for additional issues or ideas for enhancements, submit a pull request or log it in the [tracker](https://github.com/tristanlee85/supportportal/issues).
