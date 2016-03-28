@@ -94,5 +94,14 @@ var customizations = {
         scriptname:   'auto-refresh-grid.js',
         requires:     ['configurator'],
         configurator: 'Customization.view.autorefresh.Configurator'
+    },
+
+    'status-detail-marker': {
+        text: 'Status Detail Marker',
+        description: 'Shows a colored marker at the configured position relating to the Status Detail',
+        type: 'feature',
+        scriptname: 'status-detail-marker.js',
+        requires: ['configurator'],
+        configurator: 'Customization.view.statusdetail.Configurator'
     }
 };
