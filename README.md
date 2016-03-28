@@ -29,7 +29,7 @@ Whenever a customizations is enabled/disabled, or configuration has changed, the
  - Disable automatic error-reporting
  - Ticket ID in title header is a link to the production URL for easier copy/paste
  - Ability to save a reply as a draft from within the Submit button menu. The draft will be restored when you return to the ticket.
- - Default the tickets grid to only show tickets assigned to you
+ - ~~Default the tickets grid to only show tickets assigned to you~~ Removed since this can be handled with filter sets
  - Auto-refresh and loadmask configurations for the main and mini ticket grid
 
 **Contributions:**

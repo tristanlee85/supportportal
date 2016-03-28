@@ -77,13 +77,6 @@ var customizations = {
         scriptname:  'ticket-replies-parser.js'
     },
 
-    'my-tickets-grid': {
-        text:        'View My Tickets Only',
-        description: 'Forces the full and mini grid to only show tickets assigned to you',
-        type:        'feature',
-        scriptname:  'my-tickets-mini-grid.js'
-    },
-
     'smart-date-format': {
         text:             'Smart Date Formatting',
         description:      'Toggle the use of smart date formatting or cusotmize it to fit your needs',
