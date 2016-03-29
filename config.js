@@ -110,5 +110,12 @@ var customizations = {
         description: 'Places the filter sets in the toolbar for easier access',
         type: 'improvement',
         scriptname: 'filter-sets.js'
+    },
+
+    'image-attachment-window': {
+        text: 'Image Attachment Window',
+        description: 'Places the image as an element so it can be scrolled and fixes issue where image may not display',
+        type: 'bug',
+        scriptname: 'image-attachment-window.js'
     }
 };
