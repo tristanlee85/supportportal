@@ -23,6 +23,7 @@ Whenever a customizations is enabled/disabled, or configuration has changed, the
  - Ability to disable mouse wheel scrolling on Credits User field
  - Automatically parse non-linkified URLs in the reply bodies and fixes broken list items that code BBCode
  - Smart date formatter can be customized to either disable or limit the date difference to format
+ - Filter Sets are also available from a menu button at the top toolbar of the full ticket grid
  
 **Features**:
  - Localized ability to enable/disable specific customizations. This functionality can be found under *Settings > Additional Customizations*
@@ -31,6 +32,7 @@ Whenever a customizations is enabled/disabled, or configuration has changed, the
  - Ability to save a reply as a draft from within the Submit button menu. The draft will be restored when you return to the ticket.
  - ~~Default the tickets grid to only show tickets assigned to you~~ Removed since this can be handled with filter sets
  - Auto-refresh and loadmask configurations for the main and mini ticket grid
+ - Display Status Detail color marker next to row in the mini ticket grid
 
 **Contributions:**
 
