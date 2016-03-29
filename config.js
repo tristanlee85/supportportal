@@ -103,5 +103,12 @@ var customizations = {
         scriptname: 'status-detail-marker.js',
         requires: ['configurator'],
         configurator: 'Customization.view.statusdetail.Configurator'
+    },
+
+    'filter-sets': {
+        text: 'Filter Sets',
+        description: 'Places the filter sets in the toolbar for easier access',
+        type: 'improvement',
+        scriptname: 'filter-sets.js'
     }
 };
