@@ -66,13 +66,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
             title:    "Support Portal Customizations - Update Available",
             message:  "An update is available which addresses the following items:",
             iconUrl:  "logo_128.png",
-            items:    [{
-                title:   'Fixed',
-                message: 'A bug in the ticket view'
-            }, {
-                title:   'Feature',
-                message: 'Another cool feature'
-            }],
+            items:    [],
             buttons:  [{
                 title: 'Ignore Notification'
             }, {
