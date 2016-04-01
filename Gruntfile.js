@@ -11,8 +11,8 @@ module.exports = function (grunt) {
                 createTag: true,
                 tagName: 'v%VERSION%',
                 tagMessage: 'Version %VERSION%',
-                push: false,
-                pushTo: 'upstream',
+                push: true,
+                pushTo: 'origin',
                 gitDescribeOptions: '--tags --always --abbrev=1 --dirty=-d',
                 globalReplace: false,
                 prereleaseName: false,
@@ -20,8 +20,14 @@ module.exports = function (grunt) {
                 regExp: false
             }
         },
+
+        changelog: {
+            sample: {
+
+            }
+        }
     });
 
     grunt.loadNpmTasks('grunt-bump');
-
+    grunt.loadNpmTasks('grunt-changelog');
 };
