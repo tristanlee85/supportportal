@@ -15,6 +15,7 @@ module.exports = function (grunt) {
                 push: 'tag',
                 pushTo: 'origin',
                 prePushCmd: 'GRUNT_BUMP=yes',
+                pushInBackground: true,
                 gitDescribeOptions: '--tags --always --abbrev=1 --dirty=-d',
                 globalReplace: false,
                 prereleaseName: false,
