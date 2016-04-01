@@ -5,7 +5,7 @@ s.onload = function () {
     this.parentNode.removeChild(this);
 
     // get the current settings to pass to the script
-    chrome.storage.local.get(null, function (items) {
+    storage.get(null, function (items) {
 
         // check if first run
         if (Object.keys(items).length === 0) {
@@ -16,14 +16,19 @@ s.onload = function () {
             });
         }
 
+
         var settings = {
             enableExtension:     !!items.enableExtension,
             localDevMode:        !!items.localDevMode,
             serverUrl:           items.serverUrl || null,
-            extensionScriptPath: chrome.extension.getURL('script')
+            extensionScriptPath: chrome.extension.getURL('script'),
+            version:             chrome.runtime.getManifest().version
         };
 
         window.postMessage(settings, "*");
+
+        // Message the extension the current version so it can continue to poll for updates
+        chrome.runtime.sendMessage({version: chrome.runtime.getManifest().version});
     });
 };
 (document.head || document.documentElement).appendChild(s);
