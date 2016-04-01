@@ -12,7 +12,7 @@ module.exports = function (grunt) {
                 createTag: true,
                 tagName: 'v%VERSION%',
                 tagMessage: 'Version %VERSION%',
-                push: true,
+                push: 'tag',
                 pushTo: 'origin',
                 prePushCmd: 'GRUNT_BUMP=yes',
                 gitDescribeOptions: '--tags --always --abbrev=1 --dirty=-d',
