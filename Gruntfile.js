@@ -1,6 +1,7 @@
 /*global module:false*/
 module.exports = function (grunt) {
     grunt.initConfig({
+        package: grunt.file.readJSON('package.json'),
         bump: {
             options: {
                 files: ['package.json', 'extension/manifest.json'],
@@ -22,8 +23,16 @@ module.exports = function (grunt) {
         },
 
         changelog: {
-            sample: {
-
+            portal: {
+                options: {
+                    after: 'v<%= package.version %>',
+                    partials: {
+                        features: '{{#each features}}{{> feature}}{{/each}}',
+                        feature: '[FEATURE] {{this}}\n',
+                        fixes: '{{#each fixes}}{{> fix}}{{/each}}',
+                        fix: '[BUGFIX] {{this}}\n'
+                    }
+                }
             }
         }
     });
