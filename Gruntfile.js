@@ -1,5 +1,7 @@
 /*global module:false*/
 module.exports = function (grunt) {
+    var Handlebars = require('handlebars');
+
     grunt.initConfig({
         package: grunt.file.readJSON('package.json'),
         bump: {
@@ -31,6 +33,25 @@ module.exports = function (grunt) {
                         feature: '[FEATURE] {{this}}\n',
                         fixes: '{{#each fixes}}{{> fix}}{{/each}}',
                         fix: '[BUGFIX] {{this}}\n'
+                    }
+                }
+            },
+            // JSON version for easier parsing
+            extension: {
+                options: {
+                    after: 'v<%= package.version %>',
+                    dest: 'changelog.json',
+                    template: '{"fixes": [{{> fixes }}], "features": [{{> features }}]}',
+                    helpers: {
+                        toJSON: function (object) {
+                            return new Handlebars.SafeString(JSON.stringify(object));
+                        }
+                    },
+                    partials: {
+                        features: '{{#each features}}{{> feature}}{{#unless @last}},{{/unless}}{{/each}}',
+                        feature: '{{toJSON this}}',
+                        fixes: '{{#each fixes}}{{> fix}}{{#unless @last}},{{/unless}}{{/each}}',
+                        fix: '{{toJSON this}}'
                     }
                 }
             }

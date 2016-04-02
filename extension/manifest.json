@@ -21,7 +21,8 @@
     },
     "content_scripts": [{
         "matches": [
-            "https://test-support.sencha.com/*"
+            "https://test-support.sencha.com/*",
+            "https://support.sencha.com/*"
         ],
         "js": [
             "contentscript.js"

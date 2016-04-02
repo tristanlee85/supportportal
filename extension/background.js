@@ -6,13 +6,9 @@
 chrome.runtime.onInstalled.addListener(function () {
     chrome.declarativeContent.onPageChanged.removeRules(undefined, function () {
         chrome.declarativeContent.onPageChanged.addRules([{
-            conditions: [
-                new chrome.declarativeContent.PageStateMatcher({
-                    pageUrl: {
-                        hostEquals: 'test-support.sencha.com'
-                    }
-                })
-            ],
+            conditions: ['suppot.sencha.com', 'test-support.sencha.com'].map(function (host) {
+                return new chrome.declarativeContent.PageStateMatcher({pageUrl: {hostEquals: host}});
+            }),
             actions:    [new chrome.declarativeContent.ShowPageAction()]
         }]);
     });
@@ -58,9 +54,35 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
  * reloaded. The process will not start again until the extension gets updated.
  */
 (function () {
-    var intervalPeriod = 60 * (1000*60), // 1 hour
+    var
+        /**
+         * Interval for checking to see if a new update is available
+         * @type {number} Defaults to 60 minutes
+         */
+        intervalPeriod = 60 * (1000 * 60),
+
+        /**
+         * Chrome's extension local storage
+         * @type {StorageArea}
+         */
         storage = chrome.storage.local,
+
+        /**
+         * Id of the notification
+         * @type {string}
+         */
         notificationId = 'support-portal-update',
+
+        /**
+         * Relative path to the JSON changelog
+         * @type {string}
+         */
+        changelogPath = 'script/changelog.json',
+
+        /**
+         * Config options for the notification
+         * @type {{type: string, title: string, message: string, iconUrl: string, items: Array, buttons: *[], priority: number}}
+         */
         opt = {
             type:     "list",
             title:    "Support Portal Customizations - Update Available",
@@ -74,6 +96,13 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
             }],
             priority: 0
         },
+
+        /**
+         * Compares versions to determine if the application is running an older version
+         * @param a Version the application last used
+         * @param b Current version of the extension
+         * @returns {boolean} `true` if the application's last version is behind the extension version
+         */
         hasOlderVersion = function (a, b) {
             var i, cmp, len, re = /(\.0)+[^\.]*$/;
             a = (a + '').replace(re, '').split('.');
@@ -87,7 +116,22 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
             }
             return (a.length - b.length) < 0;
         },
+
+        /**
+         * References the lastError key for when a function call fails. Referencing this
+         * prevents the console from being polluted with any error messages.
+         */
+        silentErrorFn = function () {
+            // reference the to prevent polluting the console
+            chrome.runtime.lastError;
+        },
+
+        /**
+         * Current version of the extension
+         * @type {string}
+         */
         currentVersion = chrome.runtime.getManifest().version,
+
         checkInterval, notificationInterval, activeVersion;
 
     // this interval constantly checks the loaded extension version to
@@ -113,39 +157,83 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
                     if (activeTabs.length === 0) {
                         opt.buttons.pop();
                     }
-                    console.info('Creating update notification');
 
-                    chrome.notifications.create(notificationId, opt);
-                    chrome.notifications.onButtonClicked.addListener(function (notificationId, buttonIdx) {
-                        // ignore future notifications for this version
-                        if (buttonIdx === 0) {
-                            console.info('Client requested to ignore the notification; cancelling');
-                            chrome.notifications.clear(notificationId);
-                            clearInterval(notificationInterval);
-                        } else {
-                            var reload = confirm('This will reload all tabs using the Support Portal. Are you sure?'),
-                                i = 0,
-                                len = activeTabs.length;
-                            if (reload) {
-                                console.info('Reloading all active tabs');
-                                for (; i < len; i++) {
-                                    chrome.tabs.reload(activeTabs[i].id, false, function () {
-                                        // reference the to prevent polluting the console if the
-                                        // tab doesn't exist
-                                        chrome.runtime.lastError;
+                    // Read in the changelog to parse out the fixes/features
+                    chrome.runtime.getPackageDirectoryEntry(function (root) {
+                        root.getFile(changelogPath, {}, function (fileEntry) {
+                            fileEntry.file(function (file) {
+                                var reader = new FileReader();
+                                reader.onloadend = function (e) {
+                                    var changes = {},
+                                        items = [],
+                                        i = 0,
+                                        item, len;
+
+                                    try {
+                                        changes = JSON.parse(this.result);
+                                    } catch (e) {
+                                        console.error('Unable to parse contents from changelog.json', this.result);
+                                    }
+
+                                    if (changes.hasOwnProperty('fixes')) {
+                                        item = changes['fixes'],
+                                            len = item.length;
+                                        for (; i < len; i++) {
+                                            items.push({
+                                                title:   'Fixed:',
+                                                message: item[i]
+                                            });
+                                        }
+                                    }
+
+                                    if (changes.hasOwnProperty('features')) {
+                                        item = changes['features'],
+                                            len = item.length;
+                                        for (; i < len; i++) {
+                                            items.push({
+                                                title:   'Feature:',
+                                                message: item[i]
+                                            });
+                                        }
+                                    }
+
+                                    // add the list items to the notification options
+                                    opt.items = items;
+
+                                    console.info('Creating update notification');
+
+                                    chrome.notifications.create(notificationId, opt);
+                                    chrome.notifications.onButtonClicked.addListener(function (notificationId, buttonIdx) {
+                                        // ignore future notifications for this version
+                                        if (buttonIdx === 0) {
+                                            console.info('Client requested to ignore the notification; cancelling');
+                                            chrome.notifications.clear(notificationId);
+                                            clearInterval(notificationInterval);
+                                        } else {
+                                            var reload = confirm('This will reload all tabs using the Support Portal. Are you sure?'),
+                                                i = 0,
+                                                len = activeTabs.length;
+                                            if (reload) {
+                                                console.info('Reloading all active tabs');
+                                                for (; i < len; i++) {
+                                                    chrome.tabs.reload(activeTabs[i].id, false, silentErrorFn);
+                                                }
+                                                console.info('Stopping notification process');
+                                                clearInterval(notificationInterval);
+                                            }
+                                        }
                                     });
-                                }
-                                console.info('Stopping notification process');
-                                clearInterval(notificationInterval);
-                            }
-                        }
-                    });
 
-                    // keep displaying the notification every hour until action is taken
-                    notificationInterval = setInterval(function () {
-                        console.info('Follow-up notification created');
-                        chrome.notifications.create(notificationId, opt);
-                    }, intervalPeriod);
+                                    // keep displaying the notification every hour until action is taken
+                                    notificationInterval = setInterval(function () {
+                                        console.info('Follow-up notification created');
+                                        chrome.notifications.create(notificationId, opt);
+                                    }, intervalPeriod);
+                                };
+                                reader.readAsText(file);
+                            }, silentErrorFn);
+                        }, silentErrorFn);
+                    });
                 });
             } else {
                 console.info('Versions are the same; cancelling check process');
