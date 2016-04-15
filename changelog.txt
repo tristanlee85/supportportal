@@ -1,1 +1,1 @@
-[FEATURE] Chrome extension update notifications
+[BUGFIX] Enabled for production site
