@@ -6,7 +6,7 @@
 chrome.runtime.onInstalled.addListener(function () {
     chrome.declarativeContent.onPageChanged.removeRules(undefined, function () {
         chrome.declarativeContent.onPageChanged.addRules([{
-            conditions: ['suppot.sencha.com', 'test-support.sencha.com'].map(function (host) {
+            conditions: ['support.sencha.com', 'test-support.sencha.com'].map(function (host) {
                 return new chrome.declarativeContent.PageStateMatcher({pageUrl: {hostEquals: host}});
             }),
             actions:    [new chrome.declarativeContent.ShowPageAction()]
