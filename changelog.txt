@@ -1,1 +1,1 @@
-[BUGFIX] Enabled for production site
+[FEATURE] Filter sets added to the dock
