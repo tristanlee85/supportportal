@@ -3,6 +3,7 @@ Ext.define('Customization.view.filtersets.FilterSets', {
     alias:  'widget.filtersetsbutton',
 
     text: 'Filter Sets',
+    ui: 'blue-button',
 
     constructor: function (config) {
         var me = this,
@@ -42,15 +43,33 @@ Ext.define('Override.view.ticket.grid.Grid', {
 
     initComponent: function () {
         var me = this,
-            tbar;
-        me.callParent();
-        tbar = me.getDockedItems('toolbar[dock=top]')[0];
+            filterDock = me.getFilterDock(),
+            container;
 
-        // only the full grid has this
-        if (tbar) {
-            tbar.insert(3, {xtype: 'filtersetsbutton'});
-            me.on('filtersetselect', me.onFilterSetSelect);
-        }
+        me.callParent();
+
+        // create a new container to dock
+        container = Ext.create({
+            xtype: 'container',
+            dock: 'top',
+            layout: {
+                type: 'box',
+                align: 'stretch',
+                vertical: me.getXType() === 'portal-ticket-grid-mini'
+            },
+            items: [filterDock, {
+                xtype: 'filtersetsbutton'
+            }]
+        });
+
+        // remove the current instance of the gridfilters-dock component from the docked items
+        me.dockedItems.remove(filterDock);
+
+        // add it to the dock
+        filterDock.flex = 1;
+        me.addDocked(container);
+
+        me.on('filtersetselect', me.onFilterSetSelect);
     },
 
     onFilterSetSelect: function (record) {
@@ -59,7 +78,7 @@ Ext.define('Override.view.ticket.grid.Grid', {
             filters = me.getFilters().filters,
             setFilters = record.get('filters'),
             newFilters = [],
-            setFilter, value, dataIndex, filter, operator, checked;
+            setFilter, value, dataIndex, filter, operator;
 
         for (dataIndex in setFilters) {
             setFilter = setFilters[dataIndex];
@@ -92,6 +111,37 @@ Ext.define('Override.view.ticket.grid.Grid', {
             store.filter(newFilters);
         } else {
             store.clearFilter();
+        }
+    }
+});
+
+Ext.define('Override.GridFilters.Dock', {
+    override: 'GridFilters.Dock',
+
+    hide: function () {
+        var me = this,
+            isMiniGrid = me.up('portal-ticket-grid-grid').getXType() === 'portal-ticket-grid-mini';
+
+        // Hide the component only if it's the mini grid. Otherwise, just set the
+        // element to be visibly hidden so that the layout is not modified.
+        if (isMiniGrid) {
+            me.callParent();
+        } else {
+            me.getEl().setVisible(false);
+        }
+    },
+
+    show: function () {
+        var me = this,
+            grid = me.up('portal-ticket-grid-grid'),
+            isMiniGrid = grid && grid.getXType() === 'portal-ticket-grid-mini';
+
+        // Show the component only if it's the mini grid. Otherwise, just set the
+        // element to be visible so that the layout is not modified.
+        if (!grid || isMiniGrid || me.isHidden()) {
+            me.callParent();
+        } else {
+            me.getEl().setVisible(true);
         }
     }
 });
