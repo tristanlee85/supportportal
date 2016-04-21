@@ -30,5 +30,10 @@ s.onload = function () {
         // Message the extension the current version so it can continue to poll for updates
         chrome.runtime.sendMessage({version: chrome.runtime.getManifest().version});
     });
+
+    // script-specific listeners
+    document.addEventListener('copyselectedtext', function () {
+        document.execCommand('copy');
+    })
 };
 (document.head || document.documentElement).appendChild(s);

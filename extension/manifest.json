@@ -38,6 +38,7 @@
         "activeTab",
         "storage",
         "notifications",
-        "tabs"
+        "tabs",
+        "clipboardWrite"
     ]
 }
