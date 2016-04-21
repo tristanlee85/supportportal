@@ -117,5 +117,12 @@ var customizations = {
         description: 'Places the image as an element so it can be scrolled and fixes issue where image may not display',
         type: 'bug',
         scriptname: 'image-attachment-window.js'
+    },
+
+    'credits-refund': {
+        text: 'Quick Credits Refund',
+        description: 'Provides quick access to refunding credits when adding an issue',
+        type: 'feature',
+        scriptname: 'credits-refund.js'
     }
 };

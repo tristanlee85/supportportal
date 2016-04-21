@@ -5,6 +5,6 @@ Ext.define('Override.view.ticket.view.Details', {
         var me = this;
 
         me.callParent([config]);
-        me.down('numberfield[fieldLabel^=Credits]').mouseWheelEnabled = false;
+        me.down('numberfield[name=xcredits]').mouseWheelEnabled = false;
     }
 });
