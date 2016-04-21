@@ -57,9 +57,9 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     var
         /**
          * Interval for checking to see if a new update is available
-         * @type {number} Defaults to 60 minutes
+         * @type {number} Defaults to 30 minutes
          */
-        intervalPeriod = 60 * (1000 * 60),
+        intervalPeriod = 30 * (1000 * 60),
 
         /**
          * Chrome's extension local storage
@@ -149,7 +149,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
                 clearInterval(checkInterval);
 
                 console.info('Querying for active tabs');
-                chrome.tabs.query({url: '*://test-support.sencha.com/*'}, function (tabs) {
+                chrome.tabs.query({url: '*://support.sencha.com/*'}, function (tabs) {
                     console.info('# of tabs found: ', tabs.length);
                     activeTabs = tabs;
 
