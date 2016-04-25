@@ -11,18 +11,20 @@ Ext.define('Override.view.ticket.grid.TicketController', {
         var me = this,
             replies = me.callParent([ticket]);
 
-        Ext.Array.forEach(replies, function (reply, index, replies) {
-            var text = reply.reply_body;
+        if (replies) {
+            Ext.Array.forEach(replies, function (reply, index, replies) {
+                var text = reply.reply_body;
 
-            // wrap remaining URL matches in anchor tag
-            text = text.replace(me.urlRe, '<a target="_blank" href="$1">$1</a>');
+                // wrap remaining URL matches in anchor tag
+                text = text.replace(me.urlRe, '<a target="_blank" href="$1">$1</a>');
 
-            // replace rogue </li> at correct position
-            text = text.replace(me.listRe, '$1$3</li>');
+                // replace rogue </li> at correct position
+                text = text.replace(me.listRe, '$1$3</li>');
 
-            reply.reply_body = text;
-        });
+                reply.reply_body = text;
+            });
 
-        return replies;
+            return replies;
+        }
     }
 });

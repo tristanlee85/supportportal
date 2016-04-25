@@ -70,7 +70,7 @@ Ext.define('Override.view.ticket.view.Details', {
  * Gets the value of the refund checkbox and passes it to the 'newjira' event
  */
 Ext.define('Override.view.jira.AddController', {
-   override: 'portal.view.jira.AddController',
+   override: 'Portal.view.jira.AddController',
 
     onAdd : function() {
         var me   = this,

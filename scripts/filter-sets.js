@@ -3,7 +3,7 @@ Ext.define('Customization.view.filtersets.FilterSets', {
     alias:  'widget.filtersetsbutton',
 
     text: 'Filter Sets',
-    ui: 'blue-button',
+    ui:   'blue-button',
 
     constructor: function (config) {
         var me = this,
@@ -50,14 +50,14 @@ Ext.define('Override.view.ticket.grid.Grid', {
 
         // create a new container to dock
         container = Ext.create({
-            xtype: 'container',
-            dock: 'top',
+            xtype:  'container',
+            dock:   'top',
             layout: {
-                type: 'box',
-                align: 'stretch',
+                type:     'box',
+                align:    'stretch',
                 vertical: me.getXType() === 'portal-ticket-grid-mini'
             },
-            items: [filterDock, {
+            items:  [filterDock, {
                 xtype: 'filtersetsbutton'
             }]
         });
@@ -120,28 +120,35 @@ Ext.define('Override.GridFilters.Dock', {
 
     hide: function () {
         var me = this,
-            isMiniGrid = me.up('portal-ticket-grid-grid').getXType() === 'portal-ticket-grid-mini';
+            grid = me.up('portal-ticket-grid-grid'),
+            isMiniGrid = grid && grid.getXType() === 'portal-ticket-grid-mini',
+            el = me.getEl();
 
         // Hide the component only if it's the mini grid. Otherwise, just set the
         // element to be visibly hidden so that the layout is not modified.
-        if (isMiniGrid) {
-            me.callParent();
-        } else {
-            me.getEl().setVisible(false);
+        if (grid) {
+            if (isMiniGrid) {
+                me.callParent();
+            } else if (el) {
+                el.setVisible(false);
+            }
         }
     },
 
     show: function () {
         var me = this,
             grid = me.up('portal-ticket-grid-grid'),
-            isMiniGrid = grid && grid.getXType() === 'portal-ticket-grid-mini';
+            isMiniGrid = grid && grid.getXType() === 'portal-ticket-grid-mini',
+            el = me.getEl();
 
         // Show the component only if it's the mini grid. Otherwise, just set the
         // element to be visible so that the layout is not modified.
-        if (!grid || isMiniGrid || me.isHidden()) {
-            me.callParent();
-        } else {
-            me.getEl().setVisible(true);
+        if (grid) {
+            if (isMiniGrid || me.isHidden()) {
+                me.callParent();
+            } else if (el) {
+                el.setVisible(true);
+            }
         }
     }
 });
