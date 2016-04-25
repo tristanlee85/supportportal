@@ -57,9 +57,9 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     var
         /**
          * Interval for checking to see if a new update is available
-         * @type {number} Defaults to 30 minutes
+         * @type {number} Defaults to 5 minutes
          */
-        intervalPeriod = 30 * (1000 * 60),
+        intervalPeriod = 5 * (1000 * 60),
 
         /**
          * Chrome's extension local storage
@@ -94,7 +94,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
             }, {
                 title: 'Refresh Application'
             }],
-            priority: 0
+            priority: 1
         },
 
         /**
@@ -195,6 +195,13 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
                                                 message: item[i]
                                             });
                                         }
+                                    }
+
+                                    if (!items.length) {
+                                        items.push({
+                                            title: 'Update',
+                                            message: 'Minor extension update'
+                                        });
                                     }
 
                                     // add the list items to the notification options
