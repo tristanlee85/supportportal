@@ -12,23 +12,44 @@ Ext.define('Override.view.ticket.grid.TicketController', {
 
     copyCode: function (event, target) {
         var node = Ext.fly(target).down('pre').dom,
-            event = document.createEvent('Event');
+            createSelection = function () {
+                var range = document.createRange(),
+                    selection = window.getSelection(),
+                    text;
 
-        // create the selection
-        if (document.selection) {
-            var range = document.body.createTextRange();
-            range.moveToElementText(node);
-            range.select();
-        } else if (window.getSelection) {
-            var range = document.createRange();
-            range.selectNode(node);
-            window.getSelection().addRange(range);
-        }
+                selection.removeAllRanges();
+                range.selectNode(node);
+                selection.addRange(range);
+                text = selection.toString().trim();
+
+                return text;
+            },
+            text;
+
+        // create the selection and returns the text
+        text = createSelection();
 
         // copy it
-        // this event is defined in the content script
-        event.initEvent('copyselectedtext');
-        document.dispatchEvent(event);
+        Messenger.sendMessage('copyToClipboard', [text], function (response) {
+            if (response.success) {
+                var head = document.getElementsByTagName('head')[0],
+                    style = document.createElement('style');
+
+                // re-create the selection so it's visible to the user
+                createSelection();
+
+                style.type = 'text/css';
+                style.innerHTML = [
+                    '.code:after {',
+                    "    content: 'copied!';",
+                    '    background-color: #ffff9c;',
+                    '}'].join(' ');
+                head.appendChild(style);
+                setTimeout(function () {
+                    head.removeChild(style);
+                }, 2000);
+            }
+        });
     }
 }, function () {
     var style = document.createElement('style');
@@ -51,7 +72,7 @@ Ext.define('Override.view.ticket.grid.TicketController', {
         '    -moz-border-bottom-right-radius: 5px;',
         '    -ms-border-bottom-right-radius: 5px;',
         '    -o-border-bottom-right-radius: 5px;',
-            'border-bottom-right-radius: 5px;',
+        '    border-bottom-right-radius: 5px;',
         '}'].join(' ');
     document.getElementsByTagName('head')[0].appendChild(style);
 });
