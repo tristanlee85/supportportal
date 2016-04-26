@@ -223,7 +223,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
                                             if (reload) {
                                                 console.info('Reloading all active tabs');
                                                 for (; i < len; i++) {
-                                                    chrome.tabs.reload(activeTabs[i].id, false, silentErrorFn);
+                                                    chrome.tabs.reload(activeTabs[i].id, {bypassCache: false}, silentErrorFn);
                                                 }
                                                 console.info('Stopping notification process');
                                                 clearInterval(notificationInterval);
@@ -231,7 +231,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
                                         }
                                     });
 
-                                    // keep displaying the notification every hour until action is taken
+                                    // keep displaying the notification until action is taken
                                     notificationInterval = setInterval(function () {
                                         console.info('Follow-up notification created');
                                         chrome.notifications.create(notificationId, opt);
