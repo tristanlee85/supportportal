@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Support Portal",
-  "version": "2.1.19",
+  "version": "2.1.20",
   "description": "Adds fixes and enhancements to the Support Portal",
   "background": {
     "scripts": [
@@ -39,15 +39,12 @@
     "manifest.json"
   ],
   "permissions": [
-    // api permissions
     "declarativeContent",
     "activeTab",
     "storage",
     "notifications",
     "tabs",
     "clipboardWrite",
-
-    // host permissions
     "*://support.sencha.com/*",
     "*://test-support.sencha.com/*"
   ]
