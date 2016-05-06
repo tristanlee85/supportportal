@@ -39,14 +39,15 @@
     "manifest.json"
   ],
   "permissions": [
+    // api permissions
     "declarativeContent",
     "activeTab",
     "storage",
     "notifications",
     "tabs",
-    "clipboardWrite"
-  ],
-  "optional_permissions": [
+    "clipboardWrite",
+
+    // host permissions
     "*://support.sencha.com/*",
     "*://test-support.sencha.com/*"
   ]

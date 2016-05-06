@@ -73,6 +73,12 @@
                     len = activeTabs.length;
                 if (reload) {
                     console.info('Reloading all active tabs');
+                    try {
+                        // reload the background process
+                        chrome.runtime.reload();
+                    } catch (e) {
+
+                    }
                     for (; i < len; i++) {
                         chrome.tabs.reload(activeTabs[i].id, {bypassCache: false}, function () {
                         });
