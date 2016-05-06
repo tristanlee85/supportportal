@@ -77,7 +77,7 @@
                     });
 
                     $.when(
-                        // get contants of the changelog
+                        // get contents of the changelog
                         $.get(chrome.extension.getURL('script/changelog.json')),
 
                         // check if this request is from an active tab
@@ -115,6 +115,7 @@
     // then check for the extension version. This condition will
     // only happen once because after the reload, the updated code
     // will have set the version.
+    // TODO: remove this sometime down the road (5/5/16)
     checkInterval = setInterval(function () {
         var isExtensionConnected = chrome.runtime.getManifest() !== undefined,
             version = storage.getItem('portal-customizations-portal-extension-version');

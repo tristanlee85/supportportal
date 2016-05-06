@@ -1,6 +1,6 @@
 (function () {
     var runner = new Ext.util.TaskRunner(),
-        interval = 6000, // * (1000 * 60),
+        interval = 30 * (1000 * 60),
         initialVersion = window.portalExtensionVersion,
         task;
 
@@ -18,7 +18,6 @@
 
             Messenger.sendMessage('getUpdateInfo', null, function (response) {
                 var result = response.actionResult;
-                console.log(result);
                 if (response.success && initialVersion.lt(result.version) && result.isActiveTab) {
                     Ext.Msg.show({
                         title: 'Support Portal Customizations Update Available',
