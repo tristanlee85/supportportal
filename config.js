@@ -41,6 +41,11 @@ var customizations = {
         scriptname: 'configurator.js'
     },
 
+    'update-notification': {
+        force: true,
+        scriptname: 'update-notification.js'
+    },
+
     'credits-scroll': {
         text:        'Quick-scroll Credits',
         description: 'Disables mouse wheel events for the `Credits Used`',

@@ -1,8 +1,7 @@
 (function (window, document) {
     var storage = chrome.storage.local,
         portalScript = document.createElement('script'),
-        messengerScript = document.createElement('script'),
-        actions;
+        messengerScript = document.createElement('script');
 
     // Injects the customization script
     portalScript.src = chrome.extension.getURL('script/supportportal.js');
@@ -21,7 +20,6 @@
                 });
             }
 
-
             var settings = {
                 enableExtension:     !!items.enableExtension,
                 localDevMode:        !!items.localDevMode,
@@ -32,9 +30,6 @@
             };
 
             window.postMessage(settings, "*");
-
-            // Message the extension the current version so it can continue to poll for updates
-            chrome.runtime.sendMessage({version: chrome.runtime.getManifest().version});
         });
     };
 
@@ -44,57 +39,9 @@
         this.parentNode.removeChild(this);
     };
 
-    // listen for messages from the application
-    document.addEventListener('portalmessage', function (event) {
-        var data = event.detail,
-            action = data.action,
-            actionArgs = data.args,
-            requestId = data.requestId,
-            responseData = {
-                requestId: requestId,
-                actionResult: null,
-                success: false
-            },
-            replyEvent;
-
-        // validate the action
-        if (!actions.hasOwnProperty(action)) {
-            console.error('The requested action "' + action + '" does not exist');
-        } else {
-            // invoke the requested action
-            try {
-                responseData.actionResult = actions[action].apply(this, actionArgs);
-                responseData.success = true;
-            } catch (e) {
-                console.warn('Error while invoking action "' + action + '"');
-                throw e;
-            }
-        }
-
-        // respond back to the application
-        replyEvent = new CustomEvent('contentmessage', {detail: responseData});
-        document.dispatchEvent(replyEvent);
-    });
+    // Injects the content script messenger
+    chrome.runtime.sendMessage({action: 'injectContentScriptMessenger'});
 
     (document.head || document.documentElement).appendChild(portalScript);
     (document.head || document.documentElement).appendChild(messengerScript);
-
-    /**
-     * Actions are called from the application script to interact with the extension.
-     */
-    actions = {
-        copyToClipboard: function (text) {
-            var input = document.createElement('textarea');
-            document.body.appendChild(input);
-            input.value = text.trim();
-            input.focus();
-            input.select();
-            document.execCommand('Copy');
-            input.remove();
-        },
-
-        getExtensionVersion: function () {
-            return chrome.runtime.getManifest().version;
-        }
-    };
 }(window, document));
