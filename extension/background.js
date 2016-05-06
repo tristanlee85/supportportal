@@ -56,19 +56,19 @@
                     file:  'api/messenger/contentscriptmessenger.js'
                 });
             });
-        }
-    };
+        },
 
-    /**
-     * Functions defined here are to be available for the content script
-     * to call.
-     */
-    Messenger.actions = {
-        reloadTabs: function (request, sender, sendResponse) {
+        /**
+         * Reloads all tabs actively using the Support Portal
+         * @param request
+         * @param sender
+         * @param sendResponse
+         */
+        reloadTabs: function (message) {
             Messenger.getOpenPortalTabs(function (tabs) {
                 console.info('# of tabs found: ', tabs.length);
                 var activeTabs = tabs,
-                    reload = confirm('This will reload all tabs using the Support Portal. Are you sure?'),
+                    reload = confirm(message),
                     i = 0,
                     len = activeTabs.length;
                 if (reload) {
@@ -79,6 +79,25 @@
                     }
                 }
             });
+        }
+    };
+
+    /**
+     * Functions defined here are to be available for the content script
+     * to call.
+     */
+    Messenger.actions = {
+        reloadTabs: function (request, sender, sendResponse) {
+            Messenger.reloadTabs('This will reload all tabs using the Support Portal. Are you sure?');
+        },
+
+        importantUpdateReload: function () {
+            Messenger.reloadTabs([
+                'An important update has been applied to the Support Portal extension.',
+                'It is recommended you reload all tabs currently using the Support Portal.',
+                '\n\nClick "Cancel" if you are unable to reload the tabs now.',
+                '\n\nClick "Ok" to reload the tabs now.'
+            ].join(' '));
         },
 
         isRequestFromActiveTab: function (request, sender, sendResponse) {
@@ -86,7 +105,7 @@
                 active:            true, // Select active tabs
                 lastFocusedWindow: true  // In the current window
             }, function (tabs) {
-                sendResponse({isActiveTab: sender.tab.id === tabs[0].id});
+                sendResponse({isActiveTab: tabs.length === 1 && sender.tab.id === tabs[0].id});
             });
 
             // keep the connection alive for the async response

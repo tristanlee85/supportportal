@@ -1,6 +1,4 @@
 (function () {
-
-    return ;
     var runner = new Ext.util.TaskRunner(),
         interval = 6000, // * (1000 * 60),
         initialVersion = window.portalExtensionVersion,
@@ -21,7 +19,7 @@
             Messenger.sendMessage('getUpdateInfo', null, function (response) {
                 var result = response.actionResult;
                 console.log(result);
-                if (response.success && initialVersion.lt(result.version)) {
+                if (response.success && initialVersion.lt(result.version) && result.isActiveTab) {
                     Ext.Msg.show({
                         title: 'Support Portal Customizations Update Available',
                         message: new Ext.XTemplate([
@@ -36,7 +34,8 @@
                             '<tpl if="!fixes.length && !features.length">',
                                 '<li>Minor stability updates</li>',
                             '</tpl>',
-                            '<p>In order for the updates to be available, the application needs to reload.</p>'
+                            '<p>In order for the updates to be available, the application needs to reload.',
+                            'Only tabs using the Support Portal will be reloaded</p>'
                         ]).apply(result.changelog),
                         width: 500,
                         buttons: Ext.Msg.YESNOCANCEL,
