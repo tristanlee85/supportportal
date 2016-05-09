@@ -11,7 +11,18 @@ Ext.define('Override.view.ticket.grid.TicketController', {
     },
 
     copyCode: function (event, target) {
-        var node = Ext.fly(target).down('pre').dom,
+        // pointer-events are only enabled for the pseudo-element div.code:after
+        // and therefore we only want to continue the event if the event target
+        // matches our delegate target
+        if (event.getTarget() !== target) {
+            return;
+        }
+
+        // this gives the element an id to use for styling later
+        target = Ext.get(target);
+
+        var targetId = target.getId(),
+            node = target.down('pre').dom,
             createSelection = function () {
                 var range = document.createRange(),
                     selection = window.getSelection(),
@@ -40,7 +51,7 @@ Ext.define('Override.view.ticket.grid.TicketController', {
 
                 style.type = 'text/css';
                 style.innerHTML = [
-                    '.code:after {',
+                    Ext.String.format('div#{0}.code:after {', targetId),
                     "    content: 'copied!';",
                     '    background-color: #ffff9c;',
                     '}'].join(' ');
@@ -55,9 +66,9 @@ Ext.define('Override.view.ticket.grid.TicketController', {
     var style = document.createElement('style');
     style.type = 'text/css';
     style.innerHTML = [
-        '.code {pointer-events: none;}',
-        '.code:after {',
-        "    content: 'copy all';",
+        'div.code {pointer-events: none;}',
+        'div.code:after {',
+        '    content: \'copy all\';',
         '    color: #bcbcbc;',
         '    position: absolute;',
         '    font-family: "klavika-web", helvetica, arial, verdana, sans-serif;',
@@ -73,6 +84,7 @@ Ext.define('Override.view.ticket.grid.TicketController', {
         '    -ms-border-bottom-right-radius: 5px;',
         '    -o-border-bottom-right-radius: 5px;',
         '    border-bottom-right-radius: 5px;',
-        '}'].join(' ');
+        '}',
+        'div.code pre {pointer-events: all;}'].join(' ');
     document.getElementsByTagName('head')[0].appendChild(style);
 });
