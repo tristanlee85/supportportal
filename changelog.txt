@@ -1,0 +1,1 @@
+[BUGFIX] Code copy functionality prevented overflow scrolling and would highlight all &quot;copy&quot; text when clicked
