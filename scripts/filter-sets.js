@@ -12,26 +12,45 @@ Ext.define('Customization.view.filtersets.FilterSets', {
         me.callParent([config]);
 
         if (store.isLoaded()) {
-            me.initMenu(store);
+            me.initMenu();
         } else {
             store.on('load', me.initMenu, me);
         }
     },
 
-    initMenu: function (store) {
+    initMenu: function () {
         var me = this,
-            items = [];
+            configUtil = Customization.util.Config,
+            store = Ext.data.StoreManager.lookup('FilterSets'),
+            items = [],
+            defaultFilterSet = configUtil.getConfiguration('filter-sets', null);
+
+        defaultFilterSet = defaultFilterSet && defaultFilterSet.default || 0;
 
         store.each(function (record) {
-            items.push({text: record.get('name'), record: record})
+            items.push({
+                text:      record.get('name'),
+                record:    record,
+                iconAlign: 'left',
+                iconCls:   Ext.String.format('x-fa fa{0}-square-o filterset-default', defaultFilterSet === record.getId() ? '-check' : '')
+            })
         });
 
         me.setMenu({
             xtype:     'menu',
             items:     items,
             listeners: {
-                click: function (menu, item) {
-                    me.up('portal-ticket-grid-grid').fireEvent('filtersetselect', item.record);
+                click: function (menu, item, e) {
+                    var target = Ext.get(e.target),
+                        record = item.record;
+
+                    if (target.hasCls('filterset-default')) {
+                        Customization.util.Config.setConfiguration('filter-sets', {default: record.getId()});
+                        me.initMenu(Ext.data.StoreManager.lookup('FilterSets'));
+                        me.showMenu();
+                    } else {
+                        me.up('portal-ticket-grid-grid').fireEvent('filtersetselect', record);
+                    }
                 }
             }
         });
@@ -43,7 +62,10 @@ Ext.define('Override.view.ticket.grid.Grid', {
 
     initComponent: function () {
         var me = this,
+            configUtil = Customization.util.Config,
             filterDock = me.getFilterDock(),
+            defaultFilterSet = configUtil.getConfiguration('filter-sets', null),
+            filterSetStore = Ext.data.StoreManager.lookup('FilterSets'),
             container;
 
         me.callParent();
@@ -70,6 +92,21 @@ Ext.define('Override.view.ticket.grid.Grid', {
         me.addDocked(container);
 
         me.on('filtersetselect', me.onFilterSetSelect);
+
+        defaultFilterSet = defaultFilterSet && defaultFilterSet.default || 0;
+
+        // the filter set store may not be loaded yet
+        filterSetStore.on('load', function () {
+            var record = filterSetStore.findRecord('id', defaultFilterSet);
+
+            if (record) {
+                me.onFilterSetSelect(record);
+            }
+        }, filterSetStore, {single: true});
+
+        if (filterSetStore.isLoaded()) {
+            filterSetStore.fireEvent('load');
+        }
     },
 
     onFilterSetSelect: function (record) {

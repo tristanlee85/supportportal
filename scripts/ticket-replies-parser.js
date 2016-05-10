@@ -1,4 +1,4 @@
-Ext.define('Override.view.ticket.grid.TicketController', {
+Ext.define('Customization-URLParser.view.ticket.grid.TicketController', {
     override: 'Portal.view.ticket.grid.TicketController',
 
     // matches URLs except those otherwise wrapped in a tag

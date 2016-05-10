@@ -136,5 +136,12 @@ var customizations = {
         description: 'Adds a link to a code block to quickly select and copy all the text',
         type: 'feature',
         scriptname: 'code-select-all.js'
+    },
+
+    'linkify-jira': {
+        text: 'Linkify JIRA',
+        description: 'Automatically linkify JIRA IDs in a reply body',
+        type: 'feature',
+        scriptname: 'linkify-jira.js'
     }
 };
