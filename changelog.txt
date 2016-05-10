@@ -1,1 +1,1 @@
-[BUGFIX] Code copy functionality prevented overflow scrolling and would highlight all &quot;copy&quot; text when clicked
+[FEATURE] Closes #30: JIRA issues are linkified in the reply body  Filter set can be selected as the default to apply when the app launches
