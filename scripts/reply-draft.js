@@ -82,14 +82,17 @@ Ext.define('Override.view.ticket.form.ReplyController', {
                     var me = this,
                         hasDraft = me.restoreDraft();
                     me.clearDraft();
-                }
+                },
+                
+                // clear the saved draft after a successful form action
+                actioncomplete: 'clearDraft'
             },
         
             'sencha-abstracts-field-bbcode': {
                 savedraft: 'handleSaveDraft',
                 fieldkeypress: {
                     buffer: buffer,
-                        fn: 'saveDraft'
+                    fn: 'saveDraft'
                 }
             }
         });
