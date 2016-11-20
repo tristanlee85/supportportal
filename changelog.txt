@@ -1,1 +1,0 @@
-[FEATURE] Closes #30: JIRA issues are linkified in the reply body  Filter set can be selected as the default to apply when the app launches
