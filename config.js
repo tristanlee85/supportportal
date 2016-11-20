@@ -68,11 +68,13 @@ var customizations = {
     },
 
     'reply-draft': {
-        text:        'Save Reply Draft',
-        description: ['Automatically saves the reply as a draft until it\'s submitted.',
+        text:           'Save Reply Draft',
+        description:    ['Automatically saves the reply as a draft until it\'s submitted.',
                          'This becomes restored automatically when revisiting the ticket.'].join(' '),
-        type:        'feature',
-        scriptname:  'reply-draft.js'
+        type:           'feature',
+        scriptname:     'reply-draft.js',
+        requires:       ['configurator'],
+        configurator:   'Customization.view.replydraft.Configurator'
     },
 
     'ticket-replies-parser': {

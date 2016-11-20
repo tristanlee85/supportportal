@@ -33,8 +33,8 @@
                             '<tpl if="!fixes.length && !features.length">',
                                 '<li>Minor stability updates</li>',
                             '</tpl>',
-                            '<p>In order for the updates to be available, the application needs to reload.',
-                            'Only tabs using the Support Portal will be reloaded</p>'
+                            '<p>In order for the updates to be available, the application needs to reload. ',
+                            'Only tabs using the Support Portal will be reloaded.</p>'
                         ]).apply(result.changelog),
                         width: 500,
                         buttons: Ext.Msg.YESNOCANCEL,

@@ -1,5 +1,6 @@
 Ext.define('Override.view.ticket.TicketContainerController', {
-    override:        'Portal.view.ticket.TicketContainerController',
+    override: 'Portal.view.ticket.TicketContainerController',
+    
     showTicketReply: function (origin, config) {
         var view = this.getView(),
             replyForm = view.getReplyForm(),
@@ -37,8 +38,12 @@ Ext.define('Override.view.ticket.form.Reply', {
 
     initComponent: function () {
         var me = this,
-            button;
+            button, config, buffer, field;
         me.callParent();
+    
+        config = Customization.util.Config.getConfiguration('reply-draft');
+        buffer = Ext.Number.from(config.saveKeystrokeBuffer);
+        field = me.lookup('reply_textarea');
 
         button = me.down('[reference=submitButton]');
         button.actionMenu.splice(0, 0, {
@@ -47,6 +52,11 @@ Ext.define('Override.view.ticket.form.Reply', {
                 this.lookupReferenceHolder().getView().fireEvent('savedraft');
             }
         });
+        
+        // only enable keystroke monitoring if a buffer is defined
+        if (buffer > 0) {
+            field.relayEvents(field.down('textarea'), ['keypress'], 'field');
+        }
     },
 
     expand: function () {
@@ -62,18 +72,27 @@ Ext.define('Override.view.ticket.form.Reply', {
 Ext.define('Override.view.ticket.form.ReplyController', {
     override: 'Portal.view.ticket.form.ReplyController',
 
-    control: {
-        'portal-ticket-form-reply': {
-            replyexpand: function () {
-                var me = this,
-                    hasDraft = me.restoreDraft();
-                me.clearDraft();
+    init: function () {
+        var config = Customization.util.Config.getConfiguration('reply-draft'),
+            buffer = Ext.Number.from(config.saveKeystrokeBuffer);
+        
+        this.control({
+            'portal-ticket-form-reply': {
+                replyexpand: function () {
+                    var me = this,
+                        hasDraft = me.restoreDraft();
+                    me.clearDraft();
+                }
+            },
+        
+            'sencha-abstracts-field-bbcode': {
+                savedraft: 'handleSaveDraft',
+                fieldkeypress: {
+                    buffer: buffer,
+                        fn: 'saveDraft'
+                }
             }
-        },
-
-        'sencha-abstracts-field-bbcode': {
-            savedraft: 'handleSaveDraft'
-        }
+        });
     },
 
     getStorage: function () {
@@ -126,4 +145,29 @@ Ext.define('Override.view.ticket.form.ReplyController', {
         info.storage.removeItem(info.ticketId);
         info.storage.release();
     }
+});
+
+Ext.define('Customization.view.replydraft.Configurator', {
+    extend: 'Customization.view.Configurator',
+    
+    viewModel: {
+        data: {
+            saveBuffer: 0
+        }
+    },
+    
+    layout: {
+        type:  'vbox',
+        align: 'stretchmax'
+    },
+    items:  [{
+        xtype:      'numberfield',
+        name:       'saveKeystrokeBuffer',
+        fieldLabel: 'Auto-save Buffer (0 to disable; milliseconds)',
+        labelWidth: 200,
+        minValue: 0,
+        bind:       {
+            value: '{saveBuffer}'
+        }
+    }]
 });

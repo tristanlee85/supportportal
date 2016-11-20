@@ -80,4 +80,4 @@ Ext.define('Customization.view.smartdate.Configurator', {
             value:    '{daysLimit}'
         }
     }]
-})
+});
