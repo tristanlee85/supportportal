@@ -1,1 +1,1 @@
-[FEATURE] Closes #30: JIRA issues are linkified in the reply body  Filter set can be selected as the default to apply when the app launches
+[BUGFIX] Auto-save draft is cleared upon successful submit action
