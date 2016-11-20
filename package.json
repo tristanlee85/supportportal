@@ -1,6 +1,6 @@
 {
     "name": "supportportalfixes",
-    "version": "2.1.25",
+    "version": "2.1.26",
     "description": "Support Portal Customizations",
     "main": "supportportal.js",
     "dependencies": {},
