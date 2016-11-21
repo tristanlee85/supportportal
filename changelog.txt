@@ -1,1 +1,0 @@
-[BUGFIX] Auto-save draft is cleared upon successful submit action
