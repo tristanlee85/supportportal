@@ -155,22 +155,36 @@ Ext.define('Customization.view.replydraft.Configurator', {
     
     viewModel: {
         data: {
-            saveBuffer: 0
+            saveBuffer: 0,
+            desc: [ 'Save buffer is used to automatically save the reply draft',
+                    'as you type. Rather than saving on each keystroke, it\'s',
+                    'ideal to buffer the call when you feel it\'s necessary to',
+                    'save. To disable the auto-save functionality, set the value',
+                    'to 0. You may optionally save the draft manually from the',
+                    'Submit button menu'].join(' ')
         }
     },
     
-    layout: {
-        type:  'vbox',
-        align: 'stretchmax'
-    },
-    items:  [{
-        xtype:      'numberfield',
-        name:       'saveKeystrokeBuffer',
-        fieldLabel: 'Auto-save Buffer (0 to disable; milliseconds)',
-        labelWidth: 200,
-        minValue: 0,
-        bind:       {
-            value: '{saveBuffer}'
-        }
+    items: [{
+        xtype: 'fieldset',
+        title: 'Auto-save Draft Buffer',
+    
+        layout: {
+            type:  'vbox',
+            align: 'stretch'
+        },
+        items:  [{
+            bind: {
+                html: '{desc}'
+            }}, {
+            xtype:      'numberfield',
+            name:       'saveKeystrokeBuffer',
+            fieldLabel: 'Buffer (ms)',
+            labelAlign: 'left',
+            minValue: 0,
+            bind:       {
+                value: '{saveBuffer}'
+            }
+        }]
     }]
 });
