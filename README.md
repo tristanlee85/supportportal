@@ -17,7 +17,7 @@ Whenever a customizations is enabled/disabled, or configuration has changed, the
 ![Customizations](http://i.imgur.com/vx8rOj5.png)
 
 **Fixes**:
- - Creating a hyperlink from selected text in the BBCode editor doesn't always promp to enter a URL
+ - Creating a hyperlink from selected text in the BBCode editor doesn't always prompt to enter a URL
 
 **Improvements**:
  - Ability to disable mouse wheel scrolling on Credits User field
@@ -33,6 +33,10 @@ Whenever a customizations is enabled/disabled, or configuration has changed, the
  - ~~Default the tickets grid to only show tickets assigned to you~~ Removed since this can be handled with filter sets
  - Auto-refresh and loadmask configurations for the main and mini ticket grid
  - Display Status Detail color marker next to row in the mini ticket grid
+ - Quick button for refunding credits (button sets credits to 0 automatically)
+ - ~~Ability to copy all code within a code example block~~ Removed since this has been implemented directly in the 
+ application
+ - Automatically linkify Jira IDs in the reply body
 
 **Contributions:**
 

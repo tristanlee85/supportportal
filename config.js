@@ -129,12 +129,12 @@ var customizations = {
         scriptname: 'credits-refund.js'
     },
 
-    'code-select-all': {
+    /*'code-select-all': {
         text: 'Copy All Code',
         description: 'Adds a link to a code block to quickly select and copy all the text',
         type: 'feature',
         scriptname: 'code-select-all.js'
-    },
+    },*/
 
     'linkify-jira': {
         text: 'Linkify JIRA',
