@@ -271,21 +271,29 @@ window.addEventListener("message", function (event) {
                     storage = Ext.util.LocalStorage.get('portal-customizations');
 
                 Ext.iterate(configs, function (key, value) {
-                    var enabled = value.force === true || storage.getItem(key) === 'true';
-                    store.add({
-                        id:               key,
-                        text:             value.text || key,
-                        description:      value.description,
-                        type:             value.type,
-                        force:            value.force,
-                        fn:               value.fn,
-                        scriptname:       value.scriptname,
-                        configurator:     value.configurator,
-                        requires:         value.requires,
-                        requiresOverride: value.requiresOverride,
-                        enabled:          enabled,
-                        refreshRequired:  !enabled
-                    });
+                    var enabled = value.force === true || storage.getItem(key) === 'true',
+                        data = {
+                            id:               key,
+                            text:             value.text || key,
+                            description:      value.description,
+                            type:             value.type,
+                            force:            value.force,
+                            fn:               value.fn,
+                            scriptname:       value.scriptname,
+                            configurator:     value.configurator,
+                            requires:         value.requires,
+                            requiresOverride: value.requiresOverride,
+                            enabled:          enabled,
+                            refreshRequired:  !enabled
+                        };
+                    
+                    // automatically require the configurator if it's used
+                    if(data.configurator) {
+                        data.requires = Ext.isArray(data.requires) ? data.requires : [];
+                        data.requires.push('configurator');
+                        data.requires = Ext.Array.unique(data.requires);
+                    }
+                    store.add(data);
                 });
 
                 // set the current version to local storage

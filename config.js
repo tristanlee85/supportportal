@@ -73,7 +73,6 @@ var customizations = {
                          'This becomes restored automatically when revisiting the ticket.'].join(' '),
         type:           'feature',
         scriptname:     'reply-draft.js',
-        requires:       ['configurator'],
         configurator:   'Customization.view.replydraft.Configurator'
     },
 
@@ -89,7 +88,6 @@ var customizations = {
         description:      'Toggle the use of smart date formatting or cusotmize it to fit your needs',
         type:             'improvement',
         scriptname:       'smart-date-format.js',
-        requires:         ['configurator'],
         requiresOverride: 'Override.Date',
         configurator:     'Customization.view.smartdate.Configurator'
     },
@@ -99,7 +97,6 @@ var customizations = {
         description:  'Automatically registers the store to the refresh manager',
         type:         'feature',
         scriptname:   'auto-refresh-grid.js',
-        requires:     ['configurator'],
         configurator: 'Customization.view.autorefresh.Configurator'
     },
 
@@ -108,7 +105,6 @@ var customizations = {
         description: 'Shows a colored marker at the configured position relating to the Status Detail',
         type: 'feature',
         scriptname: 'status-detail-marker.js',
-        requires: ['configurator'],
         configurator: 'Customization.view.statusdetail.Configurator'
     },
 
